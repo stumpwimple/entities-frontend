@@ -1,5 +1,11 @@
 .App {
-  text-align: center;
+  font-family: 'Arial', sans-serif;
+  padding: 40px;
+  max-width: 90%;
+  margin: 50px auto;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #f9f9f9;
 }
 
 .App-logo {
@@ -28,11 +34,41 @@
   color: #61dafb;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.bottom-left-button {
+  position: fixed; /* Makes the button's position relative to the browser window */
+  bottom: 10px;    /* 10 pixels from the bottom of the window */
+  left: 10px;      /* 10 pixels from the left of the window */
+  z-index: 1000;   /* Ensures the button stays on top of other elements */
+}
+
+button {
+  cursor: pointer;
+  margin: 10px;
+  padding: 5px 10px;
+  font-size: 16px;
+  background-color: #ddd;
+}
+
+input {
+  width:fit-content;
+  padding: 7px;
+}
+
+.container80 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 75% !important;
+}
+
+.container80 .MuiGrid-container {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);  /* light border line */
+  padding: 8px 0;  /* some vertical padding for spacing */
+  margin-bottom: 1px;
+  vertical-align: top;
+}
+
+.edit-icons {
+  font-size: 14px;
+  float: right;
 }
