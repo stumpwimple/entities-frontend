@@ -5,8 +5,6 @@ import {
   Typography,
   Button,
 } from "@material-ui/core";
-import IconButton from "@mui/material/IconButton";
-import EditIcon from "@mui/icons-material/Edit";
 import { useState, useContext } from "react";
 import EditDialog from "./EditDialog";
 import supabase from "../supabaseClient";
