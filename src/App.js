@@ -25,22 +25,26 @@ function App() {
   const [session, setSession] = useState(null);
 
   const create_entity = async () => {
-    // const { data, error } = await supabase
-    //   .from("entities")
-    //   .insert([{ description: "test" }]);
     try {
-      const response = await axios.post(
-        "http://localhost:5000/generate-entity",
-        {
-          entity_description: formData.entityDescription,
-          user_id: user,
-          parent_id: "00000000-0000-0000-0000-000000000000",
-        }
-      );
-      console.log(response.data);
+      const { data, error } = await supabase
+        .from("entities")
+        .insert([
+          {
+            description: formData.entityDescription,
+            user_id: user,
+            parent_id: "00000000-0000-0000-0000-000000000000",
+          },
+        ]);
+
+      if (error) {
+        console.error("Error details:", error.message);
+        return;
+      }
+
+      console.log(data);
 
       const newEntity = {
-        ...response.data,
+        ...data[0],
       };
 
       const updatedEntities = [...entityData, newEntity];
