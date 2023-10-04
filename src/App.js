@@ -9,7 +9,6 @@ import { Container } from "@material-ui/core";
 import axios from "axios";
 import EntityTable from "./components/EntityTable";
 import SingleEntity from "./components/SingleEntity";
-import { BrowserRouter as Router, Route, Switch, Link } from "react-router-dom";
 
 function App() {
   const {
@@ -25,26 +24,22 @@ function App() {
   const [session, setSession] = useState(null);
 
   const create_entity = async () => {
+    // const { data, error } = await supabase
+    //   .from("entities")
+    //   .insert([{ description: "test" }]);
     try {
-      const { data, error } = await supabase
-        .from("entities")
-        .insert([
-          {
-            description: formData.entityDescription,
-            user_id: user,
-            parent_id: "00000000-0000-0000-0000-000000000000",
-          },
-        ]);
-
-      if (error) {
-        console.error("Error details:", error.message);
-        return;
-      }
-
-      console.log(data);
+      const response = await axios.post(
+        "https://entities.fly.dev/generate-entity",
+        {
+          entity_description: formData.entityDescription,
+          user_id: user,
+          parent_id: "00000000-0000-0000-0000-000000000000",
+        }
+      );
+      console.log(response.data);
 
       const newEntity = {
-        ...data[0],
+        ...response.data,
       };
 
       const updatedEntities = [...entityData, newEntity];
