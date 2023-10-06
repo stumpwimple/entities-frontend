@@ -3,6 +3,11 @@ import {
   Grid,
   TextField,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
   Button,
 } from "@material-ui/core";
 import { useState, useContext } from "react";
@@ -23,6 +28,21 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   const [editedDescription, setEditedDescription] = useState("");
   const [editedProperties, setEditedProperties] = useState(null);
   const [fieldBeingEdited, setFieldBeingEdited] = useState(null);
+  const [currentEntity, setCurrentEntity] = useState(null);
+  const [entityBeingEdited, setEntityBeingEdited] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [entityToDelete, setEntityToDelete] = useState(null);
+  const [editingEntityType, setEditingEntityType] = useState(null);
+
+  const openDeleteDialog = (entity) => {
+    setEntityToDelete(entity);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setEntityToDelete(null);
+    setDeleteDialogOpen(false);
+  };
 
   const filteredData = entityData.filter((entity) => {
     const nameMatch = entity.name
@@ -45,8 +65,8 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   };
 
   const startEditing = (entity, field) => {
-    setFieldBeingEdited(field);
     setEditingEntity(entity.id);
+    setEntityBeingEdited(entity);
     setIsDialogOpen(true);
     setFieldBeingEdited(field);
 
@@ -124,26 +144,96 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     }
   };
 
+  const confirmDeleteEntity = async () => {
+    if (entityToDelete) {
+      try {
+        // Delete entity from Supabase
+        const { data, error } = await supabase
+          .from("entities")
+          .delete()
+          .eq("id", entityToDelete.id);
+
+        if (error) {
+          console.error("Error deleting entity:", error);
+          // Optionally, you can display an error message to the user
+        } else {
+          // Update local state to remove the deleted entity
+          setEntityData((prevData) =>
+            prevData.filter((entity) => entity.id !== entityToDelete.id)
+          );
+        }
+      } catch (err) {
+        console.error("Unexpected error during deletion:", err);
+        // Optionally, handle unexpected errors here
+      }
+
+      closeDeleteDialog();
+    }
+  };
+
+  const [editedEntityTypeValue, setEditedEntityTypeValue] = useState("");
+
+  const startEditingEntityType = (entity) => {
+    setEditingEntityType(entity.id);
+    setEditedEntityTypeValue(entity.entity_type);
+  };
+
+  const handleEntityTypeBlur = async () => {
+    // Save to Supabase
+    const { data, error } = await supabase
+      .from("entities")
+      .update({ entity_type: editedEntityTypeValue })
+      .eq("id", editingEntityType);
+
+    if (!error) {
+      // Update local state
+      const updatedEntities = entityData.map((entity) => {
+        if (entity.id === editingEntityType) {
+          return { ...entity, entity_type: editedEntityTypeValue };
+        }
+        return entity;
+      });
+
+      setEntityData(updatedEntities);
+
+      console.log("Successfully updated entity type");
+
+      setEditingEntityType(null);
+    } else {
+      console.error("Error updating entity type:", error);
+    }
+
+    // Stop editing
+    setEditingEntityType(null);
+  };
+
   return (
     <Container className="container80">
       <h2>User's Entities</h2>
-      <button onClick={clearFilters}>Clear Filters</button>
+
       <Grid container spacing={3}>
         {/* Filters */}
-        <Grid item xs={3}>
+        <Grid item xs={3} style={{ display: "flex", alignItems: "center" }}>
+          <Button
+            onClick={clearFilters}
+            style={{ margin: 6, minWidth: "auto" }}
+          >
+            X
+          </Button>
           <TextField
             label="By Name or Type"
-            variant="standard"
+            variant="outlined"
             size="small"
             fullWidth
             value={nameOrTypeFilter}
             onChange={(e) => setNameOrTypeFilter(e.target.value)}
           />
         </Grid>
+
         <Grid item xs={9}>
           <TextField
             label="By Description"
-            variant="standard"
+            variant="outlined"
             size="small"
             fullWidth
             value={descriptionFilter}
@@ -153,62 +243,116 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       </Grid>
 
       {/* Entity Data */}
-      {filteredData.map((entity) => (
-        <Grid
-          container
-          key={entity.id}
-          spacing={3}
-          alignItems="top"
-          className="entityRow"
-        >
-          <Grid item xs={3} className="flexContainer">
-            <span
-              class="material-icons edit-icons"
-              onClick={() => startEditing(entity, "name")}
-              style={{ cursor: "pointer" }}
-            >
-              edit
-            </span>
-            <EditDialog
-              isOpen={isDialogOpen}
-              onClose={() => setIsDialogOpen(false)}
-              onSave={(newValue) => saveEditedEntity(newValue)}
-              initialValue={
-                fieldBeingEdited === "name" ? entity.name : entity.description
-              }
-              onConfirmEdit={handleConfirmEdit}
-              fieldBeingEdited={fieldBeingEdited}
-            />
-            <Typography
-              variant="h6"
-              onClick={() => setSelectedEntityId(entity.id)}
-              style={{ cursor: "pointer" }}
-            >
-              {entity.name}
-            </Typography>
+      {filteredData
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .map((entity) => (
+          <Grid
+            container
+            key={entity.id}
+            spacing={3}
+            alignItems="top"
+            className="entityRow"
+          >
+            <Grid item xs={3} className="flexContainer">
+              <div className="entityInfo">
+                <Typography
+                  className="entityName"
+                  variant="h6"
+                  onClick={() => setSelectedEntityId(entity.id)}
+                  style={{ cursor: "pointer", marginRight: "20px" }}
+                >
+                  {entity.name}
+                </Typography>
+                {editingEntityType === entity.id ? (
+                  <input
+                    value={editedEntityTypeValue}
+                    onChange={(e) => setEditedEntityTypeValue(e.target.value)}
+                    onBlur={handleEntityTypeBlur}
+                    autoFocus
+                  />
+                ) : (
+                  <Typography
+                    className="entityType"
+                    variant="body2"
+                    onClick={() => startEditingEntityType(entity)}
+                  >
+                    {entity.entity_type}
+                  </Typography>
+                )}
+              </div>
+              <div className="iconContainer">
+                <span
+                  class="material-icons edit-icons"
+                  onClick={() => startEditing(entity, "name")}
+                >
+                  edit
+                </span>
+                <span
+                  class="material-icons delete-icons"
+                  onClick={() => openDeleteDialog(entity)}
+                >
+                  delete
+                </span>
+              </div>
+            </Grid>
 
-            <Typography variant="body2">{entity.entity_type}</Typography>
+            <Grid item xs={9}>
+              <span
+                class="material-icons edit-icons"
+                onClick={() => startEditing(entity, "description")}
+                style={{ cursor: "pointer" }}
+              >
+                edit
+              </span>
+              <Typography
+                onClick={() => startEditing(entity, "description")}
+                style={{ cursor: "pointer" }}
+                variant="body2"
+              >
+                {entity.description}
+              </Typography>
+            </Grid>
           </Grid>
-          <Grid item xs={9}>
-            <span
-              class="material-icons edit-icons"
-              onClick={() => startEditing(entity, "description")}
-              style={{ cursor: "pointer" }}
-            >
-              edit
-            </span>
-            <EditDialog
-              isOpen={isDialogOpen}
-              onClose={() => setIsDialogOpen(false)}
-              onSave={(newValue) => saveEditedEntity(newValue)}
-              initialValue={editedData}
-              onConfirmEdit={handleConfirmEdit}
-              fieldBeingEdited="description"
-            />
-            <Typography variant="body2">{entity.description}</Typography>
-          </Grid>
-        </Grid>
-      ))}
+        ))}
+      <EditDialog
+        isOpen={isDialogOpen}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setEditingEntity(null);
+          setEntityBeingEdited(null);
+        }}
+        onSave={(newValue) => saveEditedEntity(newValue)}
+        initialValue={
+          entityBeingEdited
+            ? fieldBeingEdited === "name"
+              ? entityBeingEdited.name
+              : entityBeingEdited.description
+            : ""
+        }
+        onConfirmEdit={handleConfirmEdit}
+        fieldBeingEdited={fieldBeingEdited}
+      />
+      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete {entityToDelete?.name}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <span style={{ flex: "1 0 0" }} />
+          <Button
+            onClick={confirmDeleteEntity}
+            variant="contained"
+            color="secondary"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

@@ -27,18 +27,15 @@ function SingleEntity({ thisEntity }) {
     entityData,
   } = useContext(DataContext);
   const [editingPropertyIndex, setEditingPropertyIndex] = useState(null);
+  const [editingPropertyName, setEditingPropertyName] = useState(null);
+  const [parentEntity, setParentEntity] = useState(null);
 
   const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
-  console.log("thisEntity:", entity);
-
   const createSubEntity = async (subEntityInfo) => {
-    // const { data, error } = await supabase
-    //   .from("entities")
-    //   .insert([{ description: "test" }]);
     try {
       const response = await axios.post(
-        "http://localhost:5000/generate-entity",
+        "https://entities.fly.dev/generate-entity",
         {
           entity_description: subEntityInfo,
           user_id: user,
@@ -50,10 +47,7 @@ function SingleEntity({ thisEntity }) {
       const newEntity = {
         ...response.data,
       };
-
-      const updatedEntities = [...entityData, newEntity];
-
-      setEntityData(updatedEntities);
+      setEntityData((prevEntities) => [...prevEntities, newEntity]);
     } catch (error) {
       console.error("Error details:", error.message);
     }
@@ -123,7 +117,7 @@ function SingleEntity({ thisEntity }) {
           }
           console.log("Updated Entity (Alternative method):", updatedEntity);
 
-          return updatedEntity; // Just return the updatedEntity
+          return updatedEntity;
         }
         return entity;
       });
@@ -132,7 +126,6 @@ function SingleEntity({ thisEntity }) {
       console.log("updatedEntities", updatedEntities);
       setEditingEntity(null);
     } else {
-      // Handle the error appropriately
       console.error("Error updating entity:", error);
     }
   };
@@ -143,10 +136,45 @@ function SingleEntity({ thisEntity }) {
     setSelectedEntityId(null);
   };
 
-  const parentEntity = entityData.find((e) => e.id === entity.parent_id);
+  const [editedPropertyNameValue, setEditedPropertyNameValue] = useState("");
+
+  const startEditingPropertyName = (property, index) => {
+    setEditingPropertyName(index);
+    setEditedPropertyNameValue(property.name);
+  };
+
+  const handlePropertyNameBlur = async () => {
+    const updatedProperties = [...entity.properties];
+    updatedProperties[editingPropertyName].name = editedPropertyNameValue;
+
+    const { data, error } = await supabase
+      .from("entities")
+      .update({ properties: updatedProperties })
+      .eq("id", entity.id);
+
+    if (!error) {
+      const updatedEntities = entityData.map((e) => {
+        if (e.id === entity.id) {
+          return { ...e, properties: updatedProperties };
+        }
+        return e;
+      });
+
+      setEntityData(updatedEntities);
+    } else {
+      console.error("Error updating property name:", error);
+    }
+
+    setEditingPropertyName(null);
+  };
+
+  useEffect(() => {
+    const foundParentEntity = entityData.find((e) => e.id === entity.parent_id);
+    setParentEntity(foundParentEntity);
+  }, [entityData, entity]);
 
   return (
-    <Container className="container80">
+    <Container>
       <Grid container spacing={3} alignItems="top" className="entityRow">
         <Grid item xs={3}>
           <Typography variant="h5">Entity Name:</Typography>
@@ -204,14 +232,19 @@ function SingleEntity({ thisEntity }) {
         </Grid>
 
         <Grid container spacing={3}>
+          <hr className="customLine" />
           {/* Filters */}
-          <Grid item xs={3}>
-            <button onClick={clearFilters}>Clear Filters</button>
-          </Grid>
-          <Grid item xs={9}>
+          <Grid item xs={3}></Grid>
+          <Grid item xs={9} style={{ display: "flex", alignItems: "center" }}>
+            <Button
+              onClick={clearFilters}
+              style={{ margin: 6, minWidth: "auto" }}
+            >
+              X
+            </Button>
             <TextField
-              label="Filter"
-              variant="standard"
+              label="Filter by Description"
+              variant="outlined"
               size="small"
               fullWidth
               value={nameOrTypeFilter}
@@ -224,17 +257,37 @@ function SingleEntity({ thisEntity }) {
 
         {filteredProperties.map((property, index) => (
           <>
+            <hr className="customLine" />
             <Grid item xs={3}>
-              <Typography variant="body1">{property.name}</Typography>
-              <button
+              {editingPropertyName === index ? (
+                <input
+                  value={editedPropertyNameValue}
+                  onChange={(e) => setEditedPropertyNameValue(e.target.value)}
+                  onBlur={handlePropertyNameBlur}
+                  autoFocus
+                />
+              ) : (
+                <Typography
+                  variant="body1"
+                  onClick={() => startEditingPropertyName(property, index)}
+                >
+                  {property.name}
+                </Typography>
+              )}
+
+              <Button
+                variant="outlined"
                 onClick={() =>
                   createSubEntity(
-                    property.name + ": with description " + property.description
+                    "type is " +
+                      property.name +
+                      ": with description " +
+                      property.description
                   )
                 }
               >
                 Expand
-              </button>
+              </Button>
             </Grid>
             <Grid item xs={9}>
               <Typography
@@ -274,26 +327,6 @@ function SingleEntity({ thisEntity }) {
               className="entityRow"
             >
               <Grid item xs={3} className="flexContainer">
-                {/* <span
-                  class="material-icons edit-icons"
-                  onClick={() => startEditing(entity, "name")}
-                  style={{ cursor: "pointer" }}
-                >
-                  edit
-                </span>
-                <EditDialog
-                  isOpen={isDialogOpen}
-                  onClose={() => setIsDialogOpen(false)}
-                  onSave={(newValue) => saveEditedEntity(newValue)}
-                  initialValue={
-                    fieldBeingEdited === "name"
-                      ? entity.name
-                      : entity.description
-                  }
-                  onConfirmEdit={handleConfirmEdit}
-                  fieldBeingEdited={fieldBeingEdited}
-                /> */}
-
                 <Typography
                   variant="h6"
                   onClick={() => {
@@ -310,21 +343,6 @@ function SingleEntity({ thisEntity }) {
                 </Typography>
               </Grid>
               <Grid item xs={9}>
-                {/* <span
-                  class="material-icons edit-icons"
-                  onClick={() => startEditing(entity, "description")}
-                  style={{ cursor: "pointer" }}
-                >
-                  edit
-                </span>
-                <EditDialog
-                  isOpen={isDialogOpen}
-                  onClose={() => setIsDialogOpen(false)}
-                  onSave={(newValue) => saveEditedEntity(newValue)}
-                  initialValue={editedData}
-                  onConfirmEdit={handleConfirmEdit}
-                  fieldBeingEdited="description"
-                /> */}
                 <Typography variant="body2">
                   {sub_entity.description}
                 </Typography>

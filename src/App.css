@@ -68,7 +68,67 @@ input {
   vertical-align: top;
 }
 
+.flexContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative; /* Needed to position the delete icon at the bottom right */
+}
+
+
 .edit-icons {
-  font-size: 14px;
-  float: right;
+  font-size: 16px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.delete-icons {
+  font-size: 16px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.MuiTypography-root.entityName {
+  font-size: 16px;
+}
+
+.MuiTypography-root.entityType {
+  font-size: 12px;
+  color: #999;
+}
+
+.customLine {
+  height: 1px;
+  width: 100%;
+}
+
+
+.entityInfo {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.iconContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.edit-icons, .delete-icons {
+  cursor: pointer;
+  margin: 8px;
+}
+
+#description {
+  width: 100%; 
+  min-height: 100px;
+  resize: vertical; 
 }

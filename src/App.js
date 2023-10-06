@@ -5,7 +5,7 @@ import "./App.css";
 import { DataContext } from "./DataContext";
 import { Auth } from "@supabase/auth-ui-react";
 import supabase from "./supabaseClient";
-import { Container } from "@material-ui/core";
+import { Container, Typography } from "@material-ui/core";
 import axios from "axios";
 import EntityTable from "./components/EntityTable";
 import SingleEntity from "./components/SingleEntity";
@@ -22,16 +22,68 @@ function App() {
     setSelectedEntityId,
   } = useContext(DataContext);
   const [session, setSession] = useState(null);
+  const [entityType, setEntityType] = useState("");
+  const [subEntities, setSubEntities] = useState(6);
+
+  const entityTypes = [
+    "Campaign",
+    "Universe",
+    "Galaxy",
+    "Star System",
+    "Planet",
+    "Continent",
+    "Region",
+    "Special Location",
+    "Character",
+    "NPC",
+    "Monster",
+    "Creature",
+    "Item",
+    "Artifact",
+    "Weapon",
+    "Armor",
+    "Spell",
+    "Magical Item",
+    "Advanced Technology",
+    "Vehicle",
+    "Ship",
+    "Aircraft",
+    "Spacecraft",
+    "Building",
+    "Structure",
+    "Organization",
+    "Faction",
+    "Religion",
+    "Pantheon",
+    "Culture",
+    "Language",
+    "Event",
+    "Quest",
+    "Plot",
+    "Story",
+    "Adventure",
+    "Encounter",
+    "Other",
+  ];
+
+  entityTypes.sort();
 
   const create_entity = async () => {
-    // const { data, error } = await supabase
-    //   .from("entities")
-    //   .insert([{ description: "test" }]);
+    const modified_description =
+      "type is " +
+      entityType +
+      ": with " +
+      subEntities +
+      "properties, and the following entity description" +
+      formData.entityDescription;
+
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
         {
-          entity_description: formData.entityDescription,
+          entity_description: modified_description,
+          // entity_type: formData.entityType,
+          // sub_entities: formData.subEntities,
           user_id: user,
           parent_id: "00000000-0000-0000-0000-000000000000",
         }
@@ -49,9 +101,15 @@ function App() {
       console.error("Error details:", error.message);
     }
   };
-
   const handleInputChange = (event) => {
     const { name, value } = event.target;
+
+    if (name === "entityType") {
+      setEntityType(value);
+    } else if (name === "subEntities") {
+      setSubEntities(value);
+    }
+
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -107,50 +165,82 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Entities</h1>
-      {!session ? (
-        <Container>
-          <Auth supabaseClient={supabase} />
-        </Container>
-      ) : (
-        <>
-          {/* <Campaign user={user} /> */}
+      <Container>
+        <div
+          onClick={() => setSelectedEntityId(null)}
+          style={{ cursor: "pointer" }}
+        >
+          <Typography variant="h3">Entities</Typography>
+        </div>
+        {!session ? (
+          <Container>
+            <Auth supabaseClient={supabase} />
+          </Container>
+        ) : (
+          <>
+            {/* <Campaign user={user} /> */}
+            <p>Logged in: {session.user.email}</p>
+            <button onClick={() => create_entity()}>Create Entity</button>
+            <select
+              className="entityTypeSelect"
+              name="entityType"
+              value={entityType}
+              onChange={handleInputChange}
+            >
+              <option value="">Optionally Select Entity Type</option>
+              {entityTypes.map((type) => (
+                <option key={type} value={type.toLowerCase()}>
+                  {type}
+                </option>
+              ))}
+            </select>
 
-          <p>Logged in: {session.user.email}</p>
+            <select
+              name="subEntities"
+              value={subEntities}
+              onChange={handleInputChange}
+            >
+              <option value="3">3 properties</option>
+              <option value="6">6 properties</option>
+              <option value="9">9 properties</option>
+            </select>
 
-          <button onClick={() => create_entity()}>Create Entity</button>
-          <input
-            type="text"
-            id="description"
-            name="entityDescription"
-            value={formData.entityDescription}
-            onChange={handleInputChange}
-            placeholder="Entity Description"
-          />
-
-          {!selectedEntityId && (
-            <EntityTable
-              entityData={entityData}
-              setSelectedEntityId={setSelectedEntityId}
+            <br />
+            <textarea
+              type="text"
+              id="description"
+              name="entityDescription"
+              className="entityDescription"
+              value={formData.entityDescription}
+              onChange={handleInputChange}
+              placeholder="Describe the Entity you want to create, in as little or much detail as you'd like."
             />
-          )}
-          {selectedEntityId && (
-            <SingleEntity
-              entityData={entityData.filter(
-                (entity) => entity.id === selectedEntityId
-              )}
-            />
-          )}
 
-          <br />
-          <button
-            className="bottom-left-button"
-            onClick={() => supabase.auth.signOut()}
-          >
-            Sign out
-          </button>
-        </>
-      )}
+            <hr className="customLine" />
+
+            {!selectedEntityId && (
+              <EntityTable
+                entityData={entityData}
+                setSelectedEntityId={setSelectedEntityId}
+              />
+            )}
+            {selectedEntityId && (
+              <SingleEntity
+                entityData={entityData.filter(
+                  (entity) => entity.id === selectedEntityId
+                )}
+              />
+            )}
+            <br />
+            <button
+              className="bottom-left-button"
+              onClick={() => supabase.auth.signOut()}
+            >
+              Sign out
+            </button>
+          </>
+        )}
+      </Container>
     </div>
   );
 }
