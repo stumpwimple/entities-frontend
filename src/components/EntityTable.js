@@ -208,7 +208,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   };
 
   return (
-    <Container className="container80">
+    <Container>
       <h2>User's Entities</h2>
 
       <Grid container spacing={3}>
@@ -253,6 +253,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
             alignItems="top"
             className="entityRow"
           >
+            <hr className="customLine" />
             <Grid item xs={3} className="flexContainer">
               <div className="entityInfo">
                 <Typography
@@ -295,7 +296,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
                 </span>
               </div>
             </Grid>
-
             <Grid item xs={9}>
               <span
                 class="material-icons edit-icons"

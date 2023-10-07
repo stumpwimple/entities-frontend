@@ -68,6 +68,17 @@ function App() {
 
   entityTypes.sort();
 
+  const fetchEntities = async () => {
+    if (user) {
+      const { data, error } = await supabase
+        .from("entities")
+        .select("*")
+        .eq("user_id", String(user));
+      console.log("data", data[0]);
+      if (data) setEntityData(data);
+    }
+  };
+
   const create_entity = async () => {
     const modified_description =
       "type is " +
@@ -80,6 +91,7 @@ function App() {
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
+        // "http://localhost:5000/generate-entity",
         {
           entity_description: modified_description,
           // entity_type: formData.entityType,
@@ -88,15 +100,10 @@ function App() {
           parent_id: "00000000-0000-0000-0000-000000000000",
         }
       );
+      //NEED TO CHECK THE response.data from backend AM NOT GETTING THE ID BACK CORRECTLY
       console.log(response.data);
 
-      const newEntity = {
-        ...response.data,
-      };
-
-      const updatedEntities = [...entityData, newEntity];
-
-      setEntityData(updatedEntities);
+      await fetchEntities();
     } catch (error) {
       console.error("Error details:", error.message);
     }

@@ -29,13 +29,19 @@ function SingleEntity({ thisEntity }) {
   const [editingPropertyIndex, setEditingPropertyIndex] = useState(null);
   const [editingPropertyName, setEditingPropertyName] = useState(null);
   const [parentEntity, setParentEntity] = useState(null);
+  const [entity, setEntity] = useState(null);
+  const [subEntities, setSubEntities] = useState(6);
 
-  const entity = entityData.find((entity) => entity.id === selectedEntityId);
+  // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
   const createSubEntity = async (subEntityInfo) => {
+    console.log("Creating sub-entity with info:", subEntityInfo);
+    console.log("selectedEntityId", selectedEntityId);
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
+        // "http://localhost:5000/generate-entity",
+
         {
           entity_description: subEntityInfo,
           user_id: user,
@@ -44,20 +50,33 @@ function SingleEntity({ thisEntity }) {
       );
       console.log(response.data);
 
-      const newEntity = {
-        ...response.data,
-      };
-      setEntityData((prevEntities) => [...prevEntities, newEntity]);
+      await fetchEntities();
     } catch (error) {
       console.error("Error details:", error.message);
     }
   };
 
-  const filteredProperties = entity.properties.filter(
-    (prop) =>
-      prop.name.toLowerCase().includes(nameOrTypeFilter.toLowerCase()) ||
-      prop.description.toLowerCase().includes(nameOrTypeFilter.toLowerCase())
-  );
+  const fetchEntities = async () => {
+    if (user) {
+      const { data, error } = await supabase
+        .from("entities")
+        .select("*")
+        .eq("user_id", String(user));
+      console.log("data", data);
+      if (data) setEntityData(data);
+    }
+  };
+
+  const filteredProperties =
+    entity && entity.properties
+      ? entity.properties.filter(
+          (prop) =>
+            prop.name.toLowerCase().includes(nameOrTypeFilter.toLowerCase()) ||
+            prop.description
+              .toLowerCase()
+              .includes(nameOrTypeFilter.toLowerCase())
+        )
+      : [];
 
   const startEditing = (entity, field, propertyIndex = null) => {
     setFieldBeingEdited(field);
@@ -168,10 +187,29 @@ function SingleEntity({ thisEntity }) {
     setEditingPropertyName(null);
   };
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    setSubEntities(value);
+  };
+
   useEffect(() => {
-    const foundParentEntity = entityData.find((e) => e.id === entity.parent_id);
-    setParentEntity(foundParentEntity);
+    if (entity) {
+      const foundParentEntity = entityData.find(
+        (e) => e.id === entity.parent_id
+      );
+      setParentEntity(foundParentEntity);
+    }
   }, [entityData, entity]);
+
+  useEffect(() => {
+    const foundEntity = entityData.find((e) => e.id === selectedEntityId);
+    setEntity(foundEntity);
+  }, [entityData, selectedEntityId]);
+
+  if (!entity) {
+    return <div>Entity not found</div>;
+  }
 
   return (
     <Container>
@@ -184,6 +222,7 @@ function SingleEntity({ thisEntity }) {
         </Grid>
         {entity.parent_id != "00000000-0000-0000-0000-000000000000" && (
           <>
+            <hr className="customLine" />
             <Grid item xs={3}>
               <Typography variant="h6">Parent:</Typography>
             </Grid>
@@ -201,12 +240,14 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           </>
         )}
+        <hr className="customLine" />
         <Grid item xs={3}>
           <Typography variant="h6">Type:</Typography>
         </Grid>
         <Grid item xs={9}>
           <Typography variant="body1">{entity.entity_type}</Typography>
         </Grid>
+        <hr className="customLine" />
         <Grid item xs={3} className="flexContainer">
           <Typography variant="h6">Description</Typography>
         </Grid>
@@ -268,30 +309,45 @@ function SingleEntity({ thisEntity }) {
                 />
               ) : (
                 <Typography
-                  variant="body1"
+                  variant="h6"
+                  className="propertyName"
                   onClick={() => startEditingPropertyName(property, index)}
                 >
                   {property.name}
                 </Typography>
               )}
-
               <Button
                 variant="outlined"
+                size="small"
                 onClick={() =>
                   createSubEntity(
                     "type is " +
                       property.name +
+                      " with number of properties equal to " +
+                      subEntities +
                       ": with description " +
                       property.description
                   )
                 }
               >
-                Expand
+                Make Sub-Entity
               </Button>
+              <br />
+              <select
+                name="subEntities"
+                className="entityTypeSelect"
+                value={subEntities}
+                onChange={handleInputChange}
+              >
+                <option value="3">3 properties</option>
+                <option value="6">6 properties</option>
+                <option value="9">9 properties</option>
+              </select>
             </Grid>
             <Grid item xs={9}>
               <Typography
-                variant="body1"
+                variant="body2"
+                className="propertyDescription"
                 onClick={() => startEditing(entity, "properties", index)}
                 style={{ cursor: "pointer" }}
               >
@@ -326,6 +382,7 @@ function SingleEntity({ thisEntity }) {
               alignItems="top"
               className="entityRow"
             >
+              <hr className="customLine" />
               <Grid item xs={3} className="flexContainer">
                 <Typography
                   variant="h6"

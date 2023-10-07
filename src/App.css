@@ -103,6 +103,17 @@ input {
   color: #999;
 }
 
+.MuiTypography-root.propertyName {
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+.MuiTypography-root.propertyDescription {
+  font-size: 12px;
+}
+
+
+
 .customLine {
   height: 1px;
   width: 100%;
