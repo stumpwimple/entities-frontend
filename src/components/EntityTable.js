@@ -33,6 +33,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entityToDelete, setEntityToDelete] = useState(null);
   const [editingEntityType, setEditingEntityType] = useState(null);
+  const [showSubEntities, setShowSubEntities] = useState(false);
 
   const openDeleteDialog = (entity) => {
     setEntityToDelete(entity);
@@ -45,6 +46,12 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   };
 
   const filteredData = entityData.filter((entity) => {
+    if (
+      !showSubEntities &&
+      entity.parent_id !== "00000000-0000-0000-0000-000000000000"
+    ) {
+      return false;
+    }
     const nameMatch = entity.name
       ?.toLowerCase()
       .includes(nameOrTypeFilter.toLowerCase());
@@ -210,7 +217,16 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   return (
     <Container>
       <h2>User's Entities</h2>
-
+      <div
+        style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+      >
+        <input
+          type="checkbox"
+          checked={showSubEntities}
+          onChange={(e) => setShowSubEntities(e.target.checked)}
+        />
+        <label style={{ marginLeft: "10px" }}>Show all sub-entities</label>
+      </div>
       <Grid container spacing={3}>
         {/* Filters */}
         <Grid item xs={3} style={{ display: "flex", alignItems: "center" }}>
@@ -255,15 +271,31 @@ function EntityTable({ entityData, setSelectedEntityId }) {
           >
             <hr className="customLine" />
             <Grid item xs={3} className="flexContainer">
-              <div className="entityInfo">
-                <Typography
-                  className="entityName"
-                  variant="h6"
-                  onClick={() => setSelectedEntityId(entity.id)}
-                  style={{ cursor: "pointer", marginRight: "20px" }}
+              <div className="entityInfo ">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  {entity.name}
-                </Typography>
+                  <Typography
+                    className="entityName"
+                    variant="h6"
+                    onClick={() => setSelectedEntityId(entity.id)}
+                    style={{ cursor: "pointer", marginRight: "20px" }}
+                  >
+                    {entity.name}
+                  </Typography>
+
+                  <span
+                    class="material-icons edit-icons"
+                    onClick={() => startEditing(entity, "name")}
+                  >
+                    edit
+                  </span>
+                </div>
+
                 {editingEntityType === entity.id ? (
                   <input
                     value={editedEntityTypeValue}
@@ -283,12 +315,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
               </div>
               <div className="iconContainer">
                 <span
-                  class="material-icons edit-icons"
-                  onClick={() => startEditing(entity, "name")}
-                >
-                  edit
-                </span>
-                <span
                   class="material-icons delete-icons"
                   onClick={() => openDeleteDialog(entity)}
                 >
@@ -297,13 +323,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
               </div>
             </Grid>
             <Grid item xs={9}>
-              <span
-                class="material-icons edit-icons"
-                onClick={() => startEditing(entity, "description")}
-                style={{ cursor: "pointer" }}
-              >
-                edit
-              </span>
               <Typography
                 onClick={() => startEditing(entity, "description")}
                 style={{ cursor: "pointer" }}

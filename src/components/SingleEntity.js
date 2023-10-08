@@ -4,6 +4,11 @@ import {
   TextField,
   Typography,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@material-ui/core";
 import { useState, useContext, useEffect } from "react";
 import EditDialog from "./EditDialog";
@@ -31,12 +36,29 @@ function SingleEntity({ thisEntity }) {
   const [parentEntity, setParentEntity] = useState(null);
   const [entity, setEntity] = useState(null);
   const [subEntities, setSubEntities] = useState(6);
+  const [dialogState, setDialogState] = useState({
+    open: false,
+    content: "",
+    title: "Entity Editing",
+  });
+  const [entityToDelete, setEntityToDelete] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState(null);
+  const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
+  const [newPropertyName, setNewPropertyName] = useState("");
+  const [newPropertyDescription, setNewPropertyDescription] = useState("");
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
   const createSubEntity = async (subEntityInfo) => {
     console.log("Creating sub-entity with info:", subEntityInfo);
     console.log("selectedEntityId", selectedEntityId);
+
+    setDialogState({
+      open: true,
+      content: "Creating sub-entity...",
+      title: "Entity Creation",
+    });
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
@@ -48,12 +70,26 @@ function SingleEntity({ thisEntity }) {
           parent_id: selectedEntityId,
         }
       );
-      console.log(response.data);
+      console.log(response.data.name);
 
       await fetchEntities();
+      setDialogState({
+        open: true,
+        content: "Sub-entity: {response.data.name} created successfully!",
+        title: "Success",
+      });
     } catch (error) {
       console.error("Error details:", error.message);
+      setDialogState({
+        open: true,
+        content: `Error, Don't panic, Do try again: ${error.message}`,
+        title: "Error",
+      });
     }
+    setTimeout(
+      () => setDialogState((prevState) => ({ ...prevState, open: false })),
+      2000
+    );
   };
 
   const fetchEntities = async () => {
@@ -144,8 +180,96 @@ function SingleEntity({ thisEntity }) {
       setEntityData(updatedEntities);
       console.log("updatedEntities", updatedEntities);
       setEditingEntity(null);
+      setDialogState({
+        open: true,
+        content: "Entity updated successfully!",
+        title: "Success",
+      });
     } else {
       console.error("Error updating entity:", error);
+      setDialogState({
+        open: true,
+        content: `Error: ${error.message}`,
+        title: "Error",
+      });
+    }
+  };
+
+  const openDeleteDialog = (property) => {
+    setPropertyToDelete(property);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setEntityToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+
+  const confirmDeleteProperty = async () => {
+    if (propertyToDelete) {
+      // Create a copy of the existing properties
+      const updatedProperties = entity.properties.filter(
+        (prop) => prop.name !== propertyToDelete.name
+      );
+
+      // Update the entity's properties in the database
+      const { data, error } = await supabase
+        .from("entities")
+        .update({ properties: updatedProperties })
+        .eq("id", entity.id);
+
+      if (!error) {
+        // Update the local state
+        const updatedEntities = entityData.map((e) => {
+          if (e.id === entity.id) {
+            return { ...e, properties: updatedProperties };
+          }
+          return e;
+        });
+        setEntityData(updatedEntities);
+      } else {
+        console.error("Error deleting property:", error);
+      }
+
+      // Close the delete dialog
+      closeDeleteDialog();
+    }
+  };
+
+  const handleAddProperty = async () => {
+    if (newPropertyName && newPropertyDescription) {
+      // Create a copy of the existing properties and add the new property
+      const updatedProperties = [
+        ...entity.properties,
+        { name: newPropertyName, description: newPropertyDescription },
+      ];
+
+      // Update the entity's properties in the database
+      const { data, error } = await supabase
+        .from("entities")
+        .update({ properties: updatedProperties })
+        .eq("id", entity.id);
+
+      if (!error) {
+        // Update the local state
+        const updatedEntities = entityData.map((e) => {
+          if (e.id === entity.id) {
+            return { ...e, properties: updatedProperties };
+          }
+          return e;
+        });
+        setEntityData(updatedEntities);
+        // Clear the new property name and description
+        setNewPropertyName("");
+        setNewPropertyDescription("");
+        // Close the add property dialog
+        setIsAddPropertyDialogOpen(false);
+      } else {
+        console.error("Error adding property:", error);
+      }
+    } else {
+      // You can show an error message or handle it in some way
+      console.warn("Property name or description is missing");
     }
   };
 
@@ -299,6 +423,7 @@ function SingleEntity({ thisEntity }) {
         {filteredProperties.map((property, index) => (
           <>
             <hr className="customLine" />
+
             <Grid item xs={3}>
               {editingPropertyName === index ? (
                 <input
@@ -308,13 +433,31 @@ function SingleEntity({ thisEntity }) {
                   autoFocus
                 />
               ) : (
-                <Typography
-                  variant="h6"
-                  className="propertyName"
-                  onClick={() => startEditingPropertyName(property, index)}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  {property.name}
-                </Typography>
+                  <Typography
+                    variant="h6"
+                    className="propertyName"
+                    onClick={() => startEditingPropertyName(property, index)}
+                  >
+                    {property.name}
+                  </Typography>
+
+                  <div className="iconContainer">
+                    <span
+                      className="material-icons delete-icons"
+                      onClick={() => openDeleteDialog(property)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      delete
+                    </span>
+                  </div>
+                </div>
               )}
               <Button
                 variant="outlined"
@@ -368,6 +511,21 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           </>
         ))}
+
+        <hr className="customLine" />
+        <Grid item xs={3}>
+          <Button
+            variant="outlined"
+            onClick={() => setIsAddPropertyDialogOpen(true)}
+          >
+            Add Property
+          </Button>
+        </Grid>
+        <Grid
+          item
+          xs={9}
+          style={{ display: "flex", alignItems: "center" }}
+        ></Grid>
       </Grid>
 
       <br />
@@ -407,6 +565,91 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           )
       )}
+      <Dialog
+        open={dialogState.open}
+        onClose={() =>
+          setDialogState((prevState) => ({ ...prevState, open: false }))
+        }
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{dialogState.title}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            {dialogState.content}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setDialogState((prevState) => ({ ...prevState, open: false }))
+            }
+            color="primary"
+            autoFocus
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the property{" "}
+            {propertyToDelete?.name}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <span style={{ flex: "1 0 0" }} />
+          <Button
+            onClick={confirmDeleteProperty}
+            variant="contained"
+            color="secondary"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isAddPropertyDialogOpen}
+        onClose={() => setIsAddPropertyDialogOpen(false)}
+      >
+        <DialogTitle>Add New Property</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Property Name"
+            fullWidth
+            value={newPropertyName}
+            onChange={(e) => setNewPropertyName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Property Description"
+            fullWidth
+            multiline
+            rows={4}
+            value={newPropertyDescription}
+            onChange={(e) => setNewPropertyDescription(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsAddPropertyDialogOpen(false)}
+            color="primary"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleAddProperty} color="primary">
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

@@ -72,27 +72,26 @@ input {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative; /* Needed to position the delete icon at the bottom right */
 }
 
 
-.edit-icons {
+/* .edit-icons {
   font-size: 16px;
   position: absolute;
   top: 0;
   right: 0;
   cursor: pointer;
   margin: 10px;
-}
+} */
 
-.delete-icons {
+/* .delete-icons {
   font-size: 16px;
   position: absolute;
   bottom: 0;
   right: 0;
   cursor: pointer;
   margin: 10px;
-}
+} */
 
 .MuiTypography-root.entityName {
   font-size: 16px;
@@ -133,7 +132,14 @@ input {
   align-items: flex-end;
 }
 
+/* .edit-icons, .delete-icons {
+  cursor: pointer;
+  margin: 8px;
+} */
+
 .edit-icons, .delete-icons {
+  
+  font-size: 16px;
   cursor: pointer;
   margin: 8px;
 }

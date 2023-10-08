@@ -5,7 +5,16 @@ import "./App.css";
 import { DataContext } from "./DataContext";
 import { Auth } from "@supabase/auth-ui-react";
 import supabase from "./supabaseClient";
-import { Container, Typography } from "@material-ui/core";
+import {
+  Container,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button,
+} from "@material-ui/core";
 import axios from "axios";
 import EntityTable from "./components/EntityTable";
 import SingleEntity from "./components/SingleEntity";
@@ -24,6 +33,12 @@ function App() {
   const [session, setSession] = useState(null);
   const [entityType, setEntityType] = useState("");
   const [subEntities, setSubEntities] = useState(6);
+
+  const [dialogState, setDialogState] = useState({
+    open: false,
+    content: "",
+    title: "Entity Creation",
+  });
 
   const entityTypes = [
     "Campaign",
@@ -80,6 +95,12 @@ function App() {
   };
 
   const create_entity = async () => {
+    setDialogState({
+      open: true,
+      content: "Creating entity...",
+      title: "Entity Creation",
+    });
+
     const modified_description =
       "type is " +
       entityType +
@@ -100,13 +121,28 @@ function App() {
           parent_id: "00000000-0000-0000-0000-000000000000",
         }
       );
-      //NEED TO CHECK THE response.data from backend AM NOT GETTING THE ID BACK CORRECTLY
       console.log(response.data);
 
       await fetchEntities();
+
+      setDialogState({
+        open: true,
+        content: "Entity created successfully!",
+        title: "Success",
+      });
     } catch (error) {
       console.error("Error details:", error.message);
+      setDialogState({
+        open: true,
+        content: `Error, Don't panic, Do try again: ${error.message}`,
+        title: "Error",
+      });
     }
+
+    setTimeout(
+      () => setDialogState((prevState) => ({ ...prevState, open: false })),
+      2000
+    );
   };
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -247,6 +283,32 @@ function App() {
             </button>
           </>
         )}
+        <Dialog
+          open={dialogState.open}
+          onClose={() =>
+            setDialogState((prevState) => ({ ...prevState, open: false }))
+          }
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{dialogState.title}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              {dialogState.content}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() =>
+                setDialogState((prevState) => ({ ...prevState, open: false }))
+              }
+              color="primary"
+              autoFocus
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </div>
   );
