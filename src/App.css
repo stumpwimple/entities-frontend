@@ -30,6 +30,11 @@
   color: white;
 }
 
+.header-dark {
+  background-color: #000000;
+  color: white;
+}
+
 .App-link {
   color: #61dafb;
 }

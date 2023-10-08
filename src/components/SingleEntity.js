@@ -47,6 +47,11 @@ function SingleEntity({ thisEntity }) {
   const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
   const [newPropertyName, setNewPropertyName] = useState("");
   const [newPropertyDescription, setNewPropertyDescription] = useState("");
+  const [subEntityName, setSubEntityName] = useState("");
+  const [subEntityType, setSubEntityType] = useState("");
+  const [subEntityDescription, setSubEntityDescription] = useState("");
+  const [isAddSubEntityDialogOpen, setIsAddSubEntityDialogOpen] =
+    useState(false);
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
@@ -520,6 +525,14 @@ function SingleEntity({ thisEntity }) {
           >
             Add Property
           </Button>
+          <br />
+          <Button
+            variant="outlined"
+            style={{ marginTop: 15 }}
+            onClick={() => setIsAddSubEntityDialogOpen(true)}
+          >
+            Add Sub-Entity
+          </Button>
         </Grid>
         <Grid
           item
@@ -647,6 +660,52 @@ function SingleEntity({ thisEntity }) {
           </Button>
           <Button onClick={handleAddProperty} color="primary">
             Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isAddSubEntityDialogOpen}
+        onClose={() => setIsAddSubEntityDialogOpen(false)}
+      >
+        <DialogTitle>Add Sub-Entity</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Name"
+            fullWidth
+            value={subEntityName}
+            onChange={(e) => setSubEntityName(e.target.value)}
+          />
+          <TextField
+            label="Type"
+            fullWidth
+            value={subEntityType}
+            onChange={(e) => setSubEntityType(e.target.value)}
+          />
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            rows={4}
+            value={subEntityDescription}
+            onChange={(e) => setSubEntityDescription(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setIsAddSubEntityDialogOpen(false)}
+            color="primary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              const subEntityInfo = `the entity is ${subEntityName}: and its type is ${subEntityType}: and its description is ${subEntityDescription}`;
+              createSubEntity(subEntityInfo);
+              setIsAddSubEntityDialogOpen(false);
+            }}
+            color="primary"
+          >
+            Confirm
           </Button>
         </DialogActions>
       </Dialog>

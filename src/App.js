@@ -210,11 +210,18 @@ function App() {
     <div className="App">
       <Container>
         <div
+          className="header-dark"
           onClick={() => setSelectedEntityId(null)}
-          style={{ cursor: "pointer" }}
+          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
         >
+          <img
+            src={`${process.env.PUBLIC_URL}/Accretion-Blur192.png`}
+            alt="Your Logo"
+            style={{ marginRight: "20px" }}
+          />
           <Typography variant="h3">Entities</Typography>
         </div>
+
         {!session ? (
           <Container>
             <Auth supabaseClient={supabase} />
