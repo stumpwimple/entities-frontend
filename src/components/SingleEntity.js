@@ -58,6 +58,7 @@ function SingleEntity({ thisEntity }) {
   const [editedEntityTypeValue, setEditedEntityTypeValue] = useState("");
   const [editingEntityType, setEditingEntityType] = useState(null);
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false);
+  const [genObject, setGenObject] = useState(false);
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
@@ -544,11 +545,15 @@ function SingleEntity({ thisEntity }) {
                       property.name +
                       " with entity description " +
                       property.description +
-                      " and with " +
+                      " " +
+                      (genObject
+                        ? ". Each of the properties should be a specific and unique example with a name and brief description given"
+                        : "") +
+                      ". Develop and Create the entity with at least " +
                       subEntities +
-                      " properties. While generating the entity consider it's parent entity for context and background consideration.  parent name:" +
+                      " properties. While creating the entity consider it's parent entity for context and background consideration.  parent name:" +
                       entity.name +
-                      ", parent summary " +
+                      ", parent summary: " +
                       entity.description
                   )
                 }
@@ -567,6 +572,14 @@ function SingleEntity({ thisEntity }) {
                 <option value="8">8 properties</option>
                 <option value="9">9 properties</option>
               </select>
+              <input
+                type="checkbox"
+                checked={genObject}
+                onChange={() => setGenObject(!genObject)}
+              />
+              <label>obj?</label>
+
+              {/* //checkbox for objects */}
             </Grid>
             <Grid item xs={9}>
               <Typography
