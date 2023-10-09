@@ -15,6 +15,7 @@ import EditDialog from "./EditDialog";
 import supabase from "../supabaseClient";
 import { DataContext } from "../DataContext";
 import axios from "axios";
+import "../App.css";
 
 function SingleEntity({ thisEntity }) {
   const [nameOrTypeFilter, setNameOrTypeFilter] = useState("");
@@ -42,7 +43,8 @@ function SingleEntity({ thisEntity }) {
     title: "Entity Editing",
   });
   const [entityToDelete, setEntityToDelete] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletePropertyDialogOpen, setDeletePropertyDialogOpen] =
+    useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState(null);
   const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
   const [newPropertyName, setNewPropertyName] = useState("");
@@ -52,6 +54,10 @@ function SingleEntity({ thisEntity }) {
   const [subEntityDescription, setSubEntityDescription] = useState("");
   const [isAddSubEntityDialogOpen, setIsAddSubEntityDialogOpen] =
     useState(false);
+
+  const [editedEntityTypeValue, setEditedEntityTypeValue] = useState("");
+  const [editingEntityType, setEditingEntityType] = useState(null);
+  const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false);
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
@@ -119,18 +125,18 @@ function SingleEntity({ thisEntity }) {
         )
       : [];
 
-  const startEditing = (entity, field, propertyIndex = null) => {
+  const startEditing = (edit_entity, field, propertyIndex = null) => {
     setFieldBeingEdited(field);
-    setEditingEntity(entity.id);
+    setEditingEntity(edit_entity.id);
     setIsDialogOpen(true);
-    setFieldBeingEdited(field);
     setEditingPropertyIndex(propertyIndex);
     if (field === "properties") {
-      setEditedData(entity.properties[propertyIndex].description);
-    } else if (field === "name") {
-      setEditedData(entity.name);
+      setEditedData(edit_entity.properties[propertyIndex].description);
+    } else if (field === "name" || field === "sub_name") {
+      console.log("edit_entity.name", edit_entity.name);
+      setEditedData(edit_entity.name);
     } else if (field === "description") {
-      setEditedData(entity.description);
+      setEditedData(edit_entity.description);
     }
   };
 
@@ -141,7 +147,7 @@ function SingleEntity({ thisEntity }) {
 
   const saveEditedEntity = async (newValue) => {
     const updatedData = {};
-    if (fieldBeingEdited === "name") {
+    if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
       updatedData.name = newValue;
     } else if (fieldBeingEdited === "description") {
       updatedData.description = newValue;
@@ -163,7 +169,7 @@ function SingleEntity({ thisEntity }) {
           console.log({ ...entity, [fieldBeingEdited]: newValue });
 
           let updatedEntity = { ...entity };
-          if (fieldBeingEdited === "name") {
+          if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
             updatedEntity.name = newValue;
             console.log(editedData);
             console.log("name: Updated Entity:", updatedEntity);
@@ -200,14 +206,24 @@ function SingleEntity({ thisEntity }) {
     }
   };
 
-  const openDeleteDialog = (property) => {
-    setPropertyToDelete(property);
-    setDeleteDialogOpen(true);
+  const openDeleteDialog = (entity) => {
+    setEntityToDelete(entity);
+    setDeleteEntityDialogOpen(true);
   };
 
   const closeDeleteDialog = () => {
     setEntityToDelete(null);
-    setDeleteDialogOpen(false);
+    setDeleteEntityDialogOpen(false);
+  };
+
+  const openDeletePropertyDialog = (property) => {
+    setPropertyToDelete(property);
+    setDeletePropertyDialogOpen(true);
+  };
+
+  const closeDeletePropertyDialog = () => {
+    setEntityToDelete(null);
+    setDeletePropertyDialogOpen(false);
   };
 
   const confirmDeleteProperty = async () => {
@@ -234,6 +250,29 @@ function SingleEntity({ thisEntity }) {
         setEntityData(updatedEntities);
       } else {
         console.error("Error deleting property:", error);
+      }
+
+      // Close the delete dialog
+      closeDeletePropertyDialog();
+    }
+  };
+
+  const confirmDeleteEntity = async () => {
+    if (entityToDelete) {
+      // Delete the entity from the database
+      const { data, error } = await supabase
+        .from("entities")
+        .delete()
+        .eq("id", entityToDelete.id);
+
+      if (!error) {
+        // Update the local state
+        const updatedEntities = entityData.filter(
+          (e) => e.id !== entityToDelete.id
+        );
+        setEntityData(updatedEntities);
+      } else {
+        console.error("Error deleting entity:", error);
       }
 
       // Close the delete dialog
@@ -340,6 +379,40 @@ function SingleEntity({ thisEntity }) {
     return <div>Entity not found</div>;
   }
 
+  const startEditingEntityType = (edit_entity) => {
+    setEditingEntityType(edit_entity.id);
+    setEditedEntityTypeValue(edit_entity.entity_type);
+  };
+
+  const handleEntityTypeBlur = async () => {
+    // Save to Supabase
+    const { data, error } = await supabase
+      .from("entities")
+      .update({ entity_type: editedEntityTypeValue })
+      .eq("id", editingEntityType);
+
+    if (!error) {
+      // Update local state
+      const updatedEntities = entityData.map((entity) => {
+        if (entity.id === editingEntityType) {
+          return { ...entity, entity_type: editedEntityTypeValue };
+        }
+        return entity;
+      });
+
+      setEntityData(updatedEntities);
+
+      console.log("Successfully updated entity type");
+
+      setEditingEntityType(null);
+    } else {
+      console.error("Error updating entity type:", error);
+    }
+
+    // Stop editing
+    setEditingEntityType(null);
+  };
+
   return (
     <Container>
       <Grid container spacing={3} alignItems="top" className="entityRow">
@@ -393,9 +466,7 @@ function SingleEntity({ thisEntity }) {
             isOpen={isDialogOpen && fieldBeingEdited !== "properties"}
             onClose={() => setIsDialogOpen(false)}
             onSave={(newValue) => saveEditedEntity(newValue)}
-            initialValue={
-              fieldBeingEdited === "name" ? entity.name : entity.description
-            }
+            initialValue={editedData}
             onConfirmEdit={handleConfirmEdit}
             fieldBeingEdited={fieldBeingEdited}
           />
@@ -456,7 +527,7 @@ function SingleEntity({ thisEntity }) {
                   <div className="iconContainer">
                     <span
                       className="material-icons delete-icons"
-                      onClick={() => openDeleteDialog(property)}
+                      onClick={() => openDeletePropertyDialog(property)}
                       style={{ cursor: "pointer" }}
                     >
                       delete
@@ -469,12 +540,16 @@ function SingleEntity({ thisEntity }) {
                 size="small"
                 onClick={() =>
                   createSubEntity(
-                    "type is " +
+                    "An entity of type " +
                       property.name +
-                      " with number of properties equal to " +
+                      " with entity description " +
+                      property.description +
+                      +" and with " +
                       subEntities +
-                      ": with description " +
-                      property.description
+                      " properties. While generating the entity consider it's parent entity for context and background consideration.  parent name:" +
+                      entity.name +
+                      ", parent summary " +
+                      entity.description
                   )
                 }
               >
@@ -540,9 +615,7 @@ function SingleEntity({ thisEntity }) {
           style={{ display: "flex", alignItems: "center" }}
         ></Grid>
       </Grid>
-
       <br />
-
       {entityData.map(
         (sub_entity) =>
           sub_entity.parent_id === selectedEntityId && (
@@ -555,23 +628,66 @@ function SingleEntity({ thisEntity }) {
             >
               <hr className="customLine" />
               <Grid item xs={3} className="flexContainer">
-                <Typography
-                  variant="h6"
-                  onClick={() => {
-                    setSelectedEntityId(sub_entity.id);
-                    console.log("Setting ID:", sub_entity.id);
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  {sub_entity.name}
-                </Typography>
+                <div className="entityInfo">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Typography
+                      className="entityName"
+                      variant="h6"
+                      onClick={() => {
+                        setSelectedEntityId(sub_entity.id);
+                      }}
+                      style={{ cursor: "pointer", marginRight: "20px" }}
+                    >
+                      {sub_entity.name}
+                    </Typography>
 
-                <Typography variant="body2">
-                  {sub_entity.entity_type}
-                </Typography>
+                    <span
+                      class="material-icons edit-icons"
+                      onClick={() => {
+                        startEditing(sub_entity, "sub_name");
+                        console.log("sub_entity", sub_entity);
+                      }}
+                    >
+                      edit
+                    </span>
+                  </div>
+
+                  {editingEntityType === sub_entity.id ? (
+                    <input
+                      value={editedEntityTypeValue}
+                      onChange={(e) => setEditedEntityTypeValue(e.target.value)}
+                      onBlur={handleEntityTypeBlur}
+                    />
+                  ) : (
+                    <Typography
+                      className="entityType"
+                      variant="body2"
+                      onClick={() => startEditingEntityType(sub_entity)}
+                    >
+                      {sub_entity.entity_type}
+                    </Typography>
+                  )}
+                  <div className="iconContainer">
+                    <span
+                      class="material-icons delete-icons"
+                      onClick={() => openDeleteDialog(sub_entity)}
+                    >
+                      delete
+                    </span>
+                  </div>
+                </div>
               </Grid>
               <Grid item xs={9}>
-                <Typography variant="body2">
+                <Typography
+                  variant="body2"
+                  onClick={() => startEditing(sub_entity, "description")}
+                >
                   {sub_entity.description}
                 </Typography>
               </Grid>
@@ -605,7 +721,10 @@ function SingleEntity({ thisEntity }) {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog}>
+      <Dialog
+        open={deletePropertyDialogOpen}
+        onClose={closeDeletePropertyDialog}
+      >
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -614,7 +733,7 @@ function SingleEntity({ thisEntity }) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDeleteDialog} color="primary">
+          <Button onClick={closeDeletePropertyDialog} color="primary">
             Cancel
           </Button>
           <span style={{ flex: "1 0 0" }} />
@@ -627,6 +746,29 @@ function SingleEntity({ thisEntity }) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={deleteEntityDialogOpen} onClose={closeDeleteDialog}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete the entity {entityToDelete?.name}?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <span style={{ flex: "1 0 0" }} />
+          <Button
+            onClick={confirmDeleteEntity}
+            variant="contained"
+            color="secondary"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog
         open={isAddPropertyDialogOpen}
         onClose={() => setIsAddPropertyDialogOpen(false)}
@@ -663,6 +805,7 @@ function SingleEntity({ thisEntity }) {
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={isAddSubEntityDialogOpen}
         onClose={() => setIsAddSubEntityDialogOpen(false)}
@@ -699,7 +842,7 @@ function SingleEntity({ thisEntity }) {
           </Button>
           <Button
             onClick={() => {
-              const subEntityInfo = `the entity is ${subEntityName}: and its type is ${subEntityType}: and its description is ${subEntityDescription}`;
+              const subEntityInfo = `An entity of type ${subEntityType} with entity description ${subEntityDescription} and with ${subEntities} properties. While generating the entity consider it's parent entity for context and background consideration.  parent name: ${entity.name}, parent summary ${entity.description}}`;
               createSubEntity(subEntityInfo);
               setIsAddSubEntityDialogOpen(false);
             }}

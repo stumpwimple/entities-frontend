@@ -15,6 +15,7 @@ import EditDialog from "./EditDialog";
 import supabase from "../supabaseClient";
 
 import { DataContext } from "../DataContext";
+import "../App.css";
 
 function EntityTable({ entityData, setSelectedEntityId }) {
   const { user, selectedEntityId, setEntityData } = useContext(DataContext);
@@ -77,7 +78,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     setIsDialogOpen(true);
     setFieldBeingEdited(field);
 
-    if (field === "name") {
+    if (field === "name") { 
       setEditedData(entity.name);
     } else if (field === "description") {
       setEditedData(entity.description);
@@ -301,7 +302,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
                     value={editedEntityTypeValue}
                     onChange={(e) => setEditedEntityTypeValue(e.target.value)}
                     onBlur={handleEntityTypeBlur}
-                    autoFocus
                   />
                 ) : (
                   <Typography

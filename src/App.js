@@ -40,6 +40,8 @@ function App() {
     title: "Entity Creation",
   });
 
+  const [showLoadingImage, setShowLoadingImage] = useState(false);
+
   const entityTypes = [
     "Campaign",
     "Universe",
@@ -159,6 +161,20 @@ function App() {
     }));
   };
 
+  const closeLoadingImage = () => {
+    setShowLoadingImage(false);
+  };
+
+  useEffect(() => {
+    // Only trigger the image display if a session exists (i.e., the user is logged in)
+    if (session) {
+      setShowLoadingImage(true);
+      setTimeout(() => {
+        setShowLoadingImage(false);
+      }, 3000); // Hide the image after 3 seconds
+    }
+  }, [session]);
+
   useEffect(() => {
     // Get the current session immediately upon component mount
     supabase.auth
@@ -228,6 +244,37 @@ function App() {
           </Container>
         ) : (
           <>
+            {/* Conditional rendering of the loading image */}
+            {showLoadingImage && (
+              <div
+                style={{
+                  position: "fixed",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1000,
+                  border: "10px solid black",
+                  textAlign: "center",
+                }}
+                onClick={closeLoadingImage}
+              >
+                <Typography
+                  variant="h3"
+                  style={{
+                    backgroundColor: "black",
+                    color: "white",
+                    padding: "10px",
+                  }}
+                >
+                  Welcome to Entities
+                </Typography>
+                <img
+                  src={`${process.env.PUBLIC_URL}/EntitiesLoadScene.png`}
+                  alt="Entities Load Scene"
+                />
+              </div>
+            )}
+
             {/* <Campaign user={user} /> */}
             <p>Logged in: {session.user.email}</p>
             <button onClick={() => create_entity()}>Create Entity</button>
@@ -244,7 +291,6 @@ function App() {
                 </option>
               ))}
             </select>
-
             <select
               name="subEntities"
               value={subEntities}
@@ -254,7 +300,6 @@ function App() {
               <option value="6">6 properties</option>
               <option value="9">9 properties</option>
             </select>
-
             <br />
             <textarea
               type="text"
@@ -265,9 +310,7 @@ function App() {
               onChange={handleInputChange}
               placeholder="Describe the Entity you want to create, in as little or much detail as you'd like."
             />
-
             <hr className="customLine" />
-
             {!selectedEntityId && (
               <EntityTable
                 entityData={entityData}
