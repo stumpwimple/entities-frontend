@@ -544,7 +544,7 @@ function SingleEntity({ thisEntity }) {
                       property.name +
                       " with entity description " +
                       property.description +
-                      +" and with " +
+                      " and with " +
                       subEntities +
                       " properties. While generating the entity consider it's parent entity for context and background consideration.  parent name:" +
                       entity.name +
@@ -564,6 +564,7 @@ function SingleEntity({ thisEntity }) {
               >
                 <option value="3">3 properties</option>
                 <option value="6">6 properties</option>
+                <option value="8">8 properties</option>
                 <option value="9">9 properties</option>
               </select>
             </Grid>
