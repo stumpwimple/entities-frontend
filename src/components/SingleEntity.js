@@ -104,6 +104,48 @@ function SingleEntity({ thisEntity }) {
     );
   };
 
+  const test_createSubEntity = async (subEntityInfo) => {
+    console.log("Creating sub-entity with info:", subEntityInfo);
+    console.log("selectedEntityId", selectedEntityId);
+
+    setDialogState({
+      open: true,
+      content: "Creating test sub-entity...",
+      title: "Entity Creation",
+    });
+    try {
+      const response = await axios.post(
+        // "https://entities.fly.dev/test-generate-entity",
+        "http://localhost:5000/test-generate-entity",
+
+        {
+          entity_description: subEntityInfo,
+          user_id: user,
+          parent_id: selectedEntityId,
+        }
+      );
+      console.log(response.data.name);
+
+      await fetchEntities();
+      setDialogState({
+        open: true,
+        content: "Sub-entity: {response.data.name} created successfully!",
+        title: "Success",
+      });
+    } catch (error) {
+      console.error("Error details:", error.message);
+      setDialogState({
+        open: true,
+        content: `Error, Don't panic, Do try again: ${error.message}`,
+        title: "Error",
+      });
+    }
+    setTimeout(
+      () => setDialogState((prevState) => ({ ...prevState, open: false })),
+      2000
+    );
+  };
+
   const fetchEntities = async () => {
     if (user) {
       const { data, error } = await supabase
@@ -539,24 +581,22 @@ function SingleEntity({ thisEntity }) {
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() =>
-                  createSubEntity(
-                    "An entity of type " +
-                      property.name +
-                      " with entity description " +
-                      property.description +
-                      " " +
-                      (genObject
-                        ? ". Each of the properties should be a specific and unique example with a name and brief description given"
-                        : "") +
-                      ". Develop and Create the entity with at least " +
-                      subEntities +
-                      " properties. While creating the entity consider it's parent entity for context and background consideration.  parent name:" +
-                      entity.name +
-                      ", parent summary: " +
-                      entity.description
-                  )
-                }
+                onClick={(event) => {
+                  let entityDescription = `An entity of type ${property.name} with entity description ${property.description}`;
+
+                  if (genObject) {
+                    entityDescription +=
+                      ". Each of the properties should be a specific and unique example with a name and brief description given";
+                  }
+
+                  entityDescription += `. Develop and Create the entity with at least ${subEntities} properties. While creating the entity consider its parent entity for context and background consideration.  parent name: ${entity.name}, parent summary: ${entity.description}`;
+
+                  if (event.ctrlKey) {
+                    test_createSubEntity(entityDescription);
+                  } else {
+                    createSubEntity(entityDescription);
+                  }
+                }}
               >
                 Make Sub-Entity
               </Button>
