@@ -41,6 +41,8 @@ function App() {
   });
 
   const [showLoadingImage, setShowLoadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageList, setImageList] = useState([]);
 
   const entityTypes = [
     "Campaign",
@@ -166,6 +168,21 @@ function App() {
   };
 
   useEffect(() => {
+    // Generate the image list based on naming convention and count
+    const totalImages = 52;
+    const imageList = Array.from(
+      { length: totalImages },
+      (_, i) => `loading_image_${i + 1}.png`
+    );
+    console.log("imageList:", imageList);
+
+    // Randomly select an image from the list
+    const randomImage = imageList[Math.floor(Math.random() * imageList.length)];
+    console.log("randomImage:", randomImage);
+    setSelectedImage(randomImage);
+  }, []);
+
+  useEffect(() => {
     // Only trigger the image display if a session exists (i.e., the user is logged in)
     if (session) {
       setShowLoadingImage(true);
@@ -269,7 +286,7 @@ function App() {
                   Welcome to Entities
                 </Typography>
                 <img
-                  src={`${process.env.PUBLIC_URL}/EntitiesLoadScene.png`}
+                  src={`${process.env.PUBLIC_URL}/images/${selectedImage}`} ///${selectedImage}`}
                   alt="Entities Load Scene"
                 />
               </div>
