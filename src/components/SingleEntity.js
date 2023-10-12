@@ -115,8 +115,8 @@ function SingleEntity({ thisEntity }) {
     });
     try {
       const response = await axios.post(
-        // "https://entities.fly.dev/test-generate-entity",
-        "http://localhost:5000/test-generate-entity",
+        "https://entities.fly.dev/test-generate-entity",
+        // "http://localhost:5000/test-generate-entity",
 
         {
           entity_description: subEntityInfo,
@@ -189,12 +189,20 @@ function SingleEntity({ thisEntity }) {
   }
 
   const saveEditedEntity = async (newValue) => {
+    console.log("Saving edited entity...");
     const updatedData = {};
     if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
       updatedData.name = newValue;
     } else if (fieldBeingEdited === "description") {
       updatedData.description = newValue;
-    } else console.log("Updating entity with ID:", editingEntity);
+    } else if (fieldBeingEdited === "properties") {
+      // Assuming the structure of the entity is such that properties is an array of objects
+      const updatedProperties = [...entity.properties];
+      updatedProperties[editingPropertyIndex].description = newValue;
+      updatedData.properties = updatedProperties;
+    } else {
+      console.log("Updating entity with ID:", editingEntity);
+    }
     console.log("Data being sent to Supabase:", updatedData);
 
     const { data, error } = await supabase
@@ -233,6 +241,7 @@ function SingleEntity({ thisEntity }) {
 
       setEntityData(updatedEntities);
       console.log("updatedEntities", updatedEntities);
+
       setEditingEntity(null);
       setDialogState({
         open: true,
@@ -377,6 +386,7 @@ function SingleEntity({ thisEntity }) {
     const updatedProperties = [...entity.properties];
     updatedProperties[editingPropertyName].name = editedPropertyNameValue;
 
+    console.log("Updated properties:", updatedProperties);
     const { data, error } = await supabase
       .from("entities")
       .update({ properties: updatedProperties })
