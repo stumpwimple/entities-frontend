@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Auth } from "@supabase/auth-ui-react";
 import { create_entity, test_create_entity } from "./apiUtils";
 
-import "react-tabs/style/react-tabs.css"; // Import default styles
+import "react-tabs/style/react-tabs.css";
 import "./App.css";
 
 import { DataContext } from "./DataContext";
@@ -16,7 +16,7 @@ import DialogComponent from "./components/DialogComponent";
 import EntityCreationForm from "./components/EntityCreationForm";
 import { entityTypes } from "./entityTypes";
 
-import LoadingImage from "./components/LoadingImage"; // Adjust the path as necessary
+import LoadingImage from "./components/LoadingImage";
 
 function App() {
   const {
@@ -121,15 +121,10 @@ function App() {
   return (
     <div className="App">
       <Container>
-        <div
-          className="header-dark"
-          onClick={() => setSelectedEntityId(null)}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-        >
+        <div className="header-dark" onClick={() => setSelectedEntityId(null)}>
           <img
             src={`${process.env.PUBLIC_URL}/Accretion-Blur192.png`}
             alt="Your Logo"
-            style={{ marginRight: "20px" }}
           />
           <Typography variant="h3">Entities</Typography>
         </div>

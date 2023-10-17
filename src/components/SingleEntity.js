@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 import { useState, useContext, useEffect } from "react";
 import EditDialog from "./EditDialog";
@@ -16,6 +18,14 @@ import supabase from "../supabaseClient";
 import { DataContext } from "../DataContext";
 import axios from "axios";
 import "../App.css";
+
+import {
+  deleteEntity,
+  moveEntity,
+  removeEntityFromParent,
+  extractRelevantEntities,
+  handleMoveEntityLogic,
+} from "./singleEntityHelpers";
 
 function SingleEntity({ thisEntity }) {
   const [nameOrTypeFilter, setNameOrTypeFilter] = useState("");
@@ -59,6 +69,10 @@ function SingleEntity({ thisEntity }) {
   const [editingEntityType, setEditingEntityType] = useState(null);
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false);
   const [genObject, setGenObject] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [selectedMoveEntity, setSelectedMoveEntity] = useState(null);
+
+  const { entities, disabledIds } = extractRelevantEntities(entity, entityData);
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
@@ -311,23 +325,14 @@ function SingleEntity({ thisEntity }) {
 
   const confirmDeleteEntity = async () => {
     if (entityToDelete) {
-      // Delete the entity from the database
-      const { data, error } = await supabase
-        .from("entities")
-        .delete()
-        .eq("id", entityToDelete.id);
-
-      if (!error) {
-        // Update the local state
-        const updatedEntities = entityData.filter(
-          (e) => e.id !== entityToDelete.id
-        );
-        setEntityData(updatedEntities);
-      } else {
+      const error = await deleteEntity(
+        entityToDelete.id,
+        entityData,
+        setEntityData
+      );
+      if (error) {
         console.error("Error deleting entity:", error);
       }
-
-      // Close the delete dialog
       closeDeleteDialog();
     }
   };
@@ -466,6 +471,26 @@ function SingleEntity({ thisEntity }) {
     setEditingEntityType(null);
   };
 
+  const handleMoveEntity = async () => {
+    console.log("Moving entity:", entity.name, " to ", selectedMoveEntity.name);
+    if (!selectedMoveEntity) return;
+
+    // Use the moveEntity function from singleEntityHelpers.js
+    const error = await moveEntity(entity, { id: selectedMoveEntity });
+    if (!error) {
+      // Assuming entityData is an array of entities
+      const updatedEntities = entityData.map((thisEntity) => {
+        if (entity.id === thisEntity.id) {
+          return { ...thisEntity, parent_id: selectedMoveEntity };
+        }
+        return thisEntity;
+      });
+      setEntityData(updatedEntities);
+    }
+
+    setIsMoveDialogOpen(false);
+  };
+
   return (
     <Container>
       <Grid container spacing={3} alignItems="top" className="entityRow">
@@ -475,26 +500,37 @@ function SingleEntity({ thisEntity }) {
         <Grid item xs={9}>
           <Typography variant="h4">{entity.name}</Typography>
         </Grid>
-        {entity.parent_id != "00000000-0000-0000-0000-000000000000" && (
-          <>
-            <hr className="customLine" />
-            <Grid item xs={3}>
-              <Typography variant="h6">Parent:</Typography>
-            </Grid>
-            <Grid item xs={9}>
-              <Typography
-                variant="h6"
-                onClick={() => {
-                  setSelectedEntityId(parentEntity.id);
-                  console.log("Setting ID:", parentEntity.id);
+        <>
+          <hr className="customLine" />
+          <Grid item xs={3}>
+            <Typography variant="h6">Parent:</Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <Typography
+              className="grid-container"
+              variant="h6"
+              onClick={() => {
+                setSelectedEntityId(parentEntity ? parentEntity.id : null);
+                console.log(
+                  "Setting ID:",
+                  parentEntity ? parentEntity.id : null
+                );
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              {parentEntity ? parentEntity.name : "Base Entity"}
+              <Button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsMoveDialogOpen(true);
+                  console.log("test");
                 }}
-                style={{ cursor: "pointer" }}
               >
-                {parentEntity ? parentEntity.name : "Not Found"}
-              </Typography>
-            </Grid>
-          </>
-        )}
+                MOVE ENTITY
+              </Button>
+            </Typography>
+          </Grid>
+        </>
         <hr className="customLine" />
         <Grid item xs={3}>
           <Typography variant="h6">Type:</Typography>
@@ -913,6 +949,55 @@ function SingleEntity({ thisEntity }) {
             color="primary"
           >
             Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={isMoveDialogOpen}
+        onClose={() => setIsMoveDialogOpen(false)}
+      >
+        <DialogTitle>Move {entity.name} to where?</DialogTitle>
+        <DialogContent>
+          <Select
+            value={selectedMoveEntity}
+            onChange={(e) => setSelectedMoveEntity(e.target.value)}
+          >
+            {entities.map((entityItem) => {
+              let entityRelationship = "";
+              if (entityItem.id === entity.id) {
+                entityRelationship = "(This Entity)";
+              } else if (entityItem.id === entity.parent_id) {
+                entityRelationship = "(Current Parent)";
+              } else if (
+                entityItem.parent_id === entity.parent_id &&
+                entityItem.entity_type === entity.entity_type
+              ) {
+                entityRelationship = `(? Same Type, ${entity.entity_type})`;
+              } else if (entityItem.parent_id === entity.parent_id) {
+                entityRelationship = "(In Same Entity)";
+              } else {
+                entityRelationship = "(Lineage Entity)";
+              }
+
+              return (
+                <MenuItem
+                  key={entityItem.id}
+                  value={entityItem.id}
+                  disabled={disabledIds.includes(entityItem.id)}
+                >
+                  {entityItem.name} {entityRelationship}
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsMoveDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleMoveEntity} color="primary">
+            Move
           </Button>
         </DialogActions>
       </Dialog>
