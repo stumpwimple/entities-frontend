@@ -323,6 +323,12 @@ function SingleEntity({ thisEntity }) {
     }
   };
 
+  useEffect(() => {
+    if (entity && entity.id) {
+      setSelectedMoveEntity(entity.id);
+    }
+  }, [entity]);
+
   const confirmDeleteEntity = async () => {
     if (entityToDelete) {
       const error = await deleteEntity(
@@ -996,7 +1002,11 @@ function SingleEntity({ thisEntity }) {
           <Button onClick={() => setIsMoveDialogOpen(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleMoveEntity} color="primary">
+          <Button
+            onClick={handleMoveEntity}
+            color="primary"
+            disabled={disabledIds.includes(selectedMoveEntity)}
+          >
             Move
           </Button>
         </DialogActions>
