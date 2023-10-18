@@ -10,8 +10,10 @@ import {
   DialogActions,
   Button,
 } from "@material-ui/core";
+
 import { useState, useContext } from "react";
 import EditDialog from "./EditDialog";
+import SearchDrawer from "./SearchDrawer";
 import supabase from "../supabaseClient";
 
 import { DataContext } from "../DataContext";
@@ -35,6 +37,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   const [entityToDelete, setEntityToDelete] = useState(null);
   const [editingEntityType, setEditingEntityType] = useState(null);
   const [showSubEntities, setShowSubEntities] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const openDeleteDialog = (entity) => {
     setEntityToDelete(entity);
@@ -63,7 +66,21 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       ?.toLowerCase()
       .includes(descriptionFilter.toLowerCase());
 
-    return (nameMatch || typeMatch) && descriptionMatch;
+    const searchTermMatch = searchTerm
+      ?.toLowerCase()
+      .split(" ")
+      .every(
+        (term) =>
+          entity.name?.toLowerCase().includes(term) ||
+          entity.entity_type?.toLowerCase().includes(term) ||
+          entity.description?.toLowerCase().includes(term)
+      );
+
+    return searchTermMatch !== ""
+      ? searchTermMatch
+      : (nameMatch || typeMatch) && descriptionMatch;
+
+    //  return (nameMatch || typeMatch) && descriptionMatch;
   });
 
   const clearFilters = () => {
@@ -78,7 +95,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     setIsDialogOpen(true);
     setFieldBeingEdited(field);
 
-    if (field === "name") { 
+    if (field === "name") {
       setEditedData(entity.name);
     } else if (field === "description") {
       setEditedData(entity.description);
@@ -238,101 +255,93 @@ function EntityTable({ entityData, setSelectedEntityId }) {
             X
           </Button>
           <TextField
-            label="By Name or Type"
+            label="By Name, Type, or Description"
             variant="outlined"
             size="small"
             fullWidth
-            value={nameOrTypeFilter}
-            onChange={(e) => setNameOrTypeFilter(e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={9}>
-          <TextField
-            label="By Description"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={descriptionFilter}
-            onChange={(e) => setDescriptionFilter(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </Grid>
       </Grid>
-
-      {/* Entity Data */}
-      {filteredData
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .map((entity) => (
-          <Grid
-            container
-            key={entity.id}
-            spacing={3}
-            alignItems="top"
-            className="entityRow"
-          >
-            <hr className="customLine" />
-            <Grid item xs={3} className="flexContainer">
-              <div className="entityInfo ">
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    className="entityName"
-                    variant="h6"
-                    onClick={() => setSelectedEntityId(entity.id)}
-                    style={{ cursor: "pointer", marginRight: "20px" }}
+      <div
+        style={{ maxHeight: "700px", overflowY: "auto", overflowX: "hidden" }}
+      >
+        {/* Entity Data */}
+        {filteredData
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .map((entity) => (
+            <Grid
+              container
+              key={entity.id}
+              spacing={3}
+              alignItems="top"
+              className="entityRow"
+            >
+              <hr className="customLine" />
+              <Grid item xs={3} className="flexContainer">
+                <div className="entityInfo ">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
                   >
-                    {entity.name}
-                  </Typography>
+                    <Typography
+                      className="entityName"
+                      variant="h6"
+                      onClick={() => setSelectedEntityId(entity.id)}
+                      style={{ cursor: "pointer", marginRight: "20px" }}
+                    >
+                      {entity.name}
+                    </Typography>
 
+                    <span
+                      class="material-icons edit-icons"
+                      onClick={() => startEditing(entity, "name")}
+                    >
+                      edit
+                    </span>
+                  </div>
+
+                  {editingEntityType === entity.id ? (
+                    <input
+                      value={editedEntityTypeValue}
+                      onChange={(e) => setEditedEntityTypeValue(e.target.value)}
+                      onBlur={handleEntityTypeBlur}
+                    />
+                  ) : (
+                    <Typography
+                      className="entityType"
+                      variant="body2"
+                      onClick={() => startEditingEntityType(entity)}
+                    >
+                      {entity.entity_type}
+                    </Typography>
+                  )}
+                </div>
+                <div className="iconContainer">
                   <span
-                    class="material-icons edit-icons"
-                    onClick={() => startEditing(entity, "name")}
+                    class="material-icons delete-icons"
+                    onClick={() => openDeleteDialog(entity)}
                   >
-                    edit
+                    delete
                   </span>
                 </div>
-
-                {editingEntityType === entity.id ? (
-                  <input
-                    value={editedEntityTypeValue}
-                    onChange={(e) => setEditedEntityTypeValue(e.target.value)}
-                    onBlur={handleEntityTypeBlur}
-                  />
-                ) : (
-                  <Typography
-                    className="entityType"
-                    variant="body2"
-                    onClick={() => startEditingEntityType(entity)}
-                  >
-                    {entity.entity_type}
-                  </Typography>
-                )}
-              </div>
-              <div className="iconContainer">
-                <span
-                  class="material-icons delete-icons"
-                  onClick={() => openDeleteDialog(entity)}
+              </Grid>
+              <Grid item xs={9}>
+                <Typography
+                  onClick={() => startEditing(entity, "description")}
+                  style={{ cursor: "pointer" }}
+                  variant="body2"
                 >
-                  delete
-                </span>
-              </div>
+                  {entity.description}
+                </Typography>
+              </Grid>
             </Grid>
-            <Grid item xs={9}>
-              <Typography
-                onClick={() => startEditing(entity, "description")}
-                style={{ cursor: "pointer" }}
-                variant="body2"
-              >
-                {entity.description}
-              </Typography>
-            </Grid>
-          </Grid>
-        ))}
+          ))}
+      </div>
       <EditDialog
         isOpen={isDialogOpen}
         onClose={() => {
@@ -372,6 +381,9 @@ function EntityTable({ entityData, setSelectedEntityId }) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Search Drawer Component */}
+      <SearchDrawer searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
     </Container>
   );
 }
