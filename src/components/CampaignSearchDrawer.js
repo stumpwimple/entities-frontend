@@ -6,6 +6,8 @@ import {
   Typography,
   Checkbox,
   FormControlLabel,
+  useTheme,
+  useMediaQuery,
 } from "@material-ui/core";
 import { DataContext } from "../DataContext";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -15,8 +17,10 @@ const useStyles = makeStyles({
   root: {
     position: "fixed",
     left: "15%",
-    width: "800px",
-    height: "600px",
+    width: "70vw",
+    height: "40vh",
+    maxWidth: "1000px",
+    maxHeight: "600px",
     border: "15px solid #6b5640", // Thicker brown border
     backgroundColor: "#fff", // White background for the entire drawer
     overflow: "hidden",
@@ -131,6 +135,8 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
   const [tempSearchTerm, setTempSearchTerm] = useState("");
   const [autoSearch, setAutoSearch] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 'sm' is for small screens, you can adjust as needed
 
   const { entityData, setEntityData, selectedEntityId, setSelectedEntityId } =
     useContext(DataContext);
@@ -151,7 +157,7 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
 
   const classes = useStyles({ expanded });
 
-  const bottomPosition = expanded ? "5vh" : "-570px";
+  const bottomPosition = expanded ? "5vh" : "-38vh";
   const scaleTransform = expanded ? "scale(1.2)" : "scale(1)"; // 20% bigger when expanded
 
   const updateEntityOrder = async (entityId, order) => {
@@ -276,9 +282,10 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
             {expanded && renderHierarchy(flattenedEntityData)}
           </div>
         </div>
-        <div className={classes.rightPage}>
-          {/* Content for the right page */}
-          {/* {tempSearchTerm && (
+        {!isMobile && (
+          <div className={classes.rightPage}>
+            {/* Content for the right page */}
+            {/* {tempSearchTerm && (
           <Button
             size="small"
             variant="standard"
@@ -338,7 +345,8 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
           label="Auto"
           style={{ marginLeft: "8px", marginTop: "8px" }}
         />*/}
-        </div>
+          </div>
+        )}
       </DragDropContext>
     </div>
   );
