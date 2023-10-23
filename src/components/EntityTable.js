@@ -11,7 +11,7 @@ import {
   Button,
 } from "@material-ui/core";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import EditDialog from "./EditDialog";
 import SearchDrawer from "./SearchDrawer";
 import supabase from "../supabaseClient";
@@ -38,6 +38,9 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   const [editingEntityType, setEditingEntityType] = useState(null);
   const [showSubEntities, setShowSubEntities] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedDescriptionId, setExpandedDescriptionId] = useState(null);
+
+  const descriptionRef = useRef(null);
 
   const openDeleteDialog = (entity) => {
     setEntityToDelete(entity);
@@ -232,6 +235,13 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     setEditingEntityType(null);
   };
 
+  const isTruncated = (ref) => {
+    const element = ref.current;
+    console.log("Scroll Height: ", element.scrollHeight);
+    console.log("Client Height: ", element.clientHeight);
+    return element.scrollHeight > element.clientHeight;
+  };
+
   return (
     <Container>
       <h2>User's Entities</h2>
@@ -332,8 +342,19 @@ function EntityTable({ entityData, setSelectedEntityId }) {
               </Grid>
               <Grid item xs={9}>
                 <Typography
-                  onClick={() => startEditing(entity, "description")}
-                  style={{ cursor: "pointer" }}
+                  ref={descriptionRef}
+                  onClick={() => {
+                    if (expandedDescriptionId === entity.id) {
+                      setExpandedDescriptionId(null); // collapse if it's already expanded
+                    } else {
+                      setExpandedDescriptionId(entity.id); // expand otherwise
+                    }
+                  }}
+                  className={
+                    expandedDescriptionId === entity.id
+                      ? ""
+                      : "truncate-multiline"
+                  }
                   variant="body2"
                 >
                   {entity.description}

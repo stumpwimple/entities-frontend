@@ -45,7 +45,8 @@ function App() {
       const { data, error } = await supabase
         .from("entities")
         .select("*")
-        .eq("user_id", String(user));
+        .eq("user_id", String(user))
+        .order("order", { ascending: true });
       if (data) setEntityData(data);
     }
   };
@@ -124,6 +125,8 @@ function App() {
         <div className="header-dark" onClick={() => setSelectedEntityId(null)}>
           <img
             src={`${process.env.PUBLIC_URL}/Accretion-Blur192.png`}
+            srcSet={`${process.env.PUBLIC_URL}/Accretion-Blur192.png 192w, ${process.env.PUBLIC_URL}/Accretion-Blur96x156.png 156w`}
+            sizes="(max-width: 600px) 96px, 192px"
             alt="Your Logo"
           />
           <Typography variant="h3">Entities</Typography>

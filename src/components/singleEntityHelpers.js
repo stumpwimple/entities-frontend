@@ -40,7 +40,9 @@ export const fetchEntityData = async (id) => {
   const { data, error } = await supabase
     .from("entities")
     .select("*")
-    .eq("id", id);
+    .eq("id", id)
+    .order("order", { ascending: true });
+
   if (error) {
     console.error("Error fetching entity data:", error);
   }

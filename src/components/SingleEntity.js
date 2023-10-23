@@ -26,6 +26,7 @@ import {
   extractRelevantEntities,
   handleMoveEntityLogic,
 } from "./singleEntityHelpers";
+import CampaignSearchDrawer from "./CampaignSearchDrawer";
 
 function SingleEntity({ thisEntity }) {
   const [nameOrTypeFilter, setNameOrTypeFilter] = useState("");
@@ -73,6 +74,7 @@ function SingleEntity({ thisEntity }) {
   const [selectedMoveEntity, setSelectedMoveEntity] = useState(null);
 
   const { entities, disabledIds } = extractRelevantEntities(entity, entityData);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // const entity = entityData.find((entity) => entity.id === selectedEntityId);
 
@@ -129,8 +131,8 @@ function SingleEntity({ thisEntity }) {
     });
     try {
       const response = await axios.post(
-        //"https://entities.fly.dev/test-generate-entity",
-        "http://localhost:5000/test-generate-entity",
+        "https://entities.fly.dev/test-generate-entity",
+        //"http://localhost:5000/test-generate-entity",
 
         {
           entity_description: subEntityInfo,
@@ -165,7 +167,8 @@ function SingleEntity({ thisEntity }) {
       const { data, error } = await supabase
         .from("entities")
         .select("*")
-        .eq("user_id", String(user));
+        .eq("user_id", String(user))
+        .order("order", { ascending: true });
       console.log("data", data);
       if (data) setEntityData(data);
     }
@@ -800,6 +803,11 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           )
       )}
+
+      <CampaignSearchDrawer
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
       <Dialog
         open={dialogState.open}
         onClose={() =>

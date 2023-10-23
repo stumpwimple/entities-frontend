@@ -197,3 +197,29 @@ input {
   justify-content: space-between;
   align-items: center;
 }
+/* 
+.truncate {
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+} */
+
+.truncate-multiline {
+  position: relative;
+  line-height: 1.2em;  /* adjust to your needs */
+  max-height: 4.5em;  /* 3 lines; adjust if you want more */
+  padding-right: 1em;
+  overflow: hidden;
+}
+
+.truncate-multiline::after {
+  content: "...";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  line-height: 1.2em;
+  padding-left: 5px;  /* space before ellipsis */
+  background: inherit;  /* to blend into the background color of the container */
+}
