@@ -25,6 +25,8 @@ const useStyles = makeStyles({
     justifyContent: "flex-start",
     cursor: "pointer",
     zIndex: 9999,
+    transition:
+      "bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
   },
   leftPage: {
     flex: "50%",
@@ -149,7 +151,8 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
 
   const classes = useStyles({ expanded });
 
-  const bottomPosition = expanded ? "0vh" : "-520px";
+  const bottomPosition = expanded ? "5vh" : "-570px";
+  const scaleTransform = expanded ? "scale(1.2)" : "scale(1)"; // 20% bigger when expanded
 
   const updateEntityOrder = async (entityId, order) => {
     const { error } = await supabase
@@ -250,6 +253,7 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
       className={classes.root}
       style={{
         bottom: bottomPosition,
+        transform: scaleTransform,
       }}
     >
       <div
@@ -262,10 +266,13 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
       </div>
       <DragDropContext onDragEnd={onDragEnd}>
         <div className={classes.leftPage}>
-          <div className={classes.content}>
-            <Typography variant="body2" className={classes.filterText}>
-              Entity Table of Contents
-            </Typography>
+          <Typography variant="subtitle1" className={classes.filterText}>
+            <strong>Entity Table of Contents</strong>
+          </Typography>
+          <div
+            className={classes.content}
+            style={{ marginTop: "10px", height: "520px", overflowY: "auto" }}
+          >
             {expanded && renderHierarchy(flattenedEntityData)}
           </div>
         </div>
