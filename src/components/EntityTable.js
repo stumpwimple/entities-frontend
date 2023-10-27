@@ -87,9 +87,9 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   });
 
   const clearFilters = () => {
-    setNameOrTypeFilter("");
-    setDescriptionFilter("");
-    setSelectedEntityId(null);
+    setSearchTerm("");
+    // setDescriptionFilter("");
+    // setSelectedEntityId(null);
   };
 
   const startEditing = (entity, field) => {
@@ -243,10 +243,10 @@ function EntityTable({ entityData, setSelectedEntityId }) {
   };
 
   return (
-    <Container>
+    <Container style={{ padding: 0 }}>
       <h2>User's Entities</h2>
       <div
-        style={{ display: "flex", alignItems: "center", marginBottom: "20px" }}
+        style={{ display: "flex", alignItems: "center", marginBottom: "10px" }}
       >
         <input
           type="checkbox"
@@ -255,27 +255,26 @@ function EntityTable({ entityData, setSelectedEntityId }) {
         />
         <label style={{ marginLeft: "10px" }}>Show all sub-entities</label>
       </div>
-      <Grid container spacing={3}>
-        {/* Filters */}
-        <Grid item xs={3} style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {searchTerm && (
           <Button
             onClick={clearFilters}
-            style={{ margin: 6, minWidth: "auto" }}
+            style={{ margin: 1, minWidth: "auto" }}
           >
             X
           </Button>
-          <TextField
-            label="By Name, Type, or Description"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </Grid>
-      </Grid>
+        )}
+        <TextField
+          label="By Name, Type, or Description"
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
       <div
-        style={{ maxHeight: "700px", overflowY: "auto", overflowX: "hidden" }}
+        style={{ maxHeight: "60vh", overflowY: "auto", overflowX: "hidden" }}
       >
         {/* Entity Data */}
         {filteredData
@@ -289,7 +288,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
               className="entityRow"
             >
               <hr className="customLine" />
-              <Grid item xs={3} className="flexContainer">
+              <Grid item xs={12} md={3} className="flexContainer">
                 <div className="entityInfo ">
                   <div
                     style={{
@@ -302,17 +301,30 @@ function EntityTable({ entityData, setSelectedEntityId }) {
                       className="entityName"
                       variant="h6"
                       onClick={() => setSelectedEntityId(entity.id)}
-                      style={{ cursor: "pointer", marginRight: "20px" }}
+                      style={{ cursor: "pointer", marginRight: "10px" }}
                     >
                       {entity.name}
                     </Typography>
-
-                    <span
-                      class="material-icons edit-icons"
-                      onClick={() => startEditing(entity, "name")}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
                     >
-                      edit
-                    </span>
+                      <span
+                        className="material-icons edit-icons"
+                        onClick={() => startEditing(entity, "name")}
+                      >
+                        edit
+                      </span>
+
+                      <span
+                        className="material-icons delete-icons"
+                        onClick={() => openDeleteDialog(entity)}
+                      >
+                        delete
+                      </span>
+                    </div>
                   </div>
 
                   {editingEntityType === entity.id ? (
@@ -322,25 +334,19 @@ function EntityTable({ entityData, setSelectedEntityId }) {
                       onBlur={handleEntityTypeBlur}
                     />
                   ) : (
-                    <Typography
-                      className="entityType"
-                      variant="body2"
-                      onClick={() => startEditingEntityType(entity)}
-                    >
-                      {entity.entity_type}
-                    </Typography>
+                    <div className="iconContainer">
+                      <Typography
+                        className="entityType"
+                        variant="body2"
+                        onClick={() => startEditingEntityType(entity)}
+                      >
+                        {entity.entity_type}
+                      </Typography>
+                    </div>
                   )}
                 </div>
-                <div className="iconContainer">
-                  <span
-                    class="material-icons delete-icons"
-                    onClick={() => openDeleteDialog(entity)}
-                  >
-                    delete
-                  </span>
-                </div>
               </Grid>
-              <Grid item xs={9}>
+              <Grid className="flexContainer" item xs={12} md={9}>
                 <Typography
                   ref={descriptionRef}
                   onClick={() => {

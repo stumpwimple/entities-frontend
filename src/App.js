@@ -13,8 +13,7 @@ import { Container, Typography, Button } from "@material-ui/core";
 import EntityTable from "./components/EntityTable";
 import SingleEntity from "./components/SingleEntity";
 import DialogComponent from "./components/DialogComponent";
-import EntityCreationForm from "./components/EntityCreationForm";
-import { entityTypes } from "./entityTypes";
+import EntityCreationDialog from "./components/EntityCreationDialog";
 
 import LoadingImage from "./components/LoadingImage";
 
@@ -34,11 +33,10 @@ function App() {
     content: "",
     title: "Entity Creation",
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const [showLoadingImage, setShowLoadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-
-  entityTypes.sort();
 
   const fetchEntities = async () => {
     if (user) {
@@ -121,11 +119,11 @@ function App() {
 
   return (
     <div className="App">
-      <Container>
+      <Container style={{ padding: 0 }}>
         <div className="header-dark" onClick={() => setSelectedEntityId(null)}>
           <img
-            src={`${process.env.PUBLIC_URL}/Accretion-Blur192.png`}
-            srcSet={`${process.env.PUBLIC_URL}/Accretion-Blur192.png 192w, ${process.env.PUBLIC_URL}/Accretion-Blur96x156.png 156w`}
+            src={`${process.env.PUBLIC_URL}/Accretion-Blur96x192.png`}
+            srcSet={`${process.env.PUBLIC_URL}/Accretion-Blur96x192.png 192w, ${process.env.PUBLIC_URL}/Accretion-Blur96x156.png 156w`}
             sizes="(max-width: 600px) 96px, 192px"
             alt="Your Logo"
           />
@@ -148,18 +146,6 @@ function App() {
 
             {/* <Campaign user={user} /> */}
             <p>Logged in: {session.user.email}</p>
-            <EntityCreationForm
-              user={user}
-              fetchEntities={fetchEntities}
-              create_entity={create_entity}
-              test_create_entity={test_create_entity}
-              entityTypes={entityTypes}
-              initialFormData={{ entityDescription: "" }}
-              initialEntityType=""
-              initialSubEntities={6}
-              dialogState={dialogState}
-              setDialogState={setDialogState}
-            />
 
             <hr className="customLine" />
             {!selectedEntityId && (
@@ -176,8 +162,24 @@ function App() {
               />
             )}
             <br />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setDialogOpen(true)}
+            >
+              Create New Entity
+            </Button>
+
+            <EntityCreationDialog
+              dialogOpen={dialogOpen}
+              setDialogOpen={setDialogOpen}
+              user={user}
+              fetchEntities={fetchEntities}
+              create_entity={create_entity}
+              test_create_entity={test_create_entity}
+            />
             <button
-              className="bottom-left-button"
+              className="top-right-button"
               onClick={() => {
                 supabase.auth.signOut();
                 sessionStorage.removeItem("hasSeenLoadingImage");
@@ -187,14 +189,6 @@ function App() {
             </button>
           </>
         )}
-        <DialogComponent
-          open={dialogState.open}
-          title={dialogState.title}
-          content={dialogState.content}
-          onClose={() =>
-            setDialogState((prevState) => ({ ...prevState, open: false }))
-          }
-        />
       </Container>
     </div>
   );

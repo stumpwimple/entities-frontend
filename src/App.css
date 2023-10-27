@@ -1,8 +1,8 @@
 .App {
   font-family: 'Arial', sans-serif;
-  padding: 40px;
+  padding: 15px;
   max-width: 90%;
-  margin: 50px auto;
+  margin: 15px auto;
   border: 1px solid #ddd;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   background-color: #f9f9f9;
@@ -39,10 +39,10 @@
   color: #61dafb;
 }
 
-.bottom-left-button {
+.top-right-button {
   position: fixed; /* Makes the button's position relative to the browser window */
-  bottom: 10px;    /* 10 pixels from the bottom of the window */
-  left: 10px;      /* 10 pixels from the left of the window */
+  top: 10px;    /* 10 pixels from the bottom of the window */
+  right: 10px;      /* 10 pixels from the left of the window */
   z-index: 1000;   /* Ensures the button stays on top of other elements */
 }
 
@@ -80,29 +80,12 @@ input {
 
 .flexContainer {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
+  padding: 0;
+  border: 0;
+  margin: 0;
 }
-
-
-/* .edit-icons {
-  font-size: 16px;
-  position: absolute;
-  top: 0;
-  right: 0;
-  cursor: pointer;
-  margin: 10px;
-} */
-
-/* .delete-icons {
-  font-size: 16px;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  cursor: pointer;
-  margin: 10px;
-} */
-
 .MuiTypography-root.entityName {
   font-size: 16px;
 }
@@ -119,6 +102,27 @@ input {
 
 .MuiTypography-root.propertyDescription {
   font-size: 12px;
+}
+
+.entityRow {
+  display: flex;
+  padding: 1px 15px 5px 5px !important;
+  margin: 0 !important;
+}
+
+.MuiGrid-root.flexContainer {
+  display: flex;
+  padding: 1px 15px 5px 5px !important;
+  margin: 0 !important;
+}
+
+.singleEntityContainer {
+  padding: 0 !important;
+  font-size: 12px;
+}
+
+.noPadding {
+  padding: 0 !important;
 }
 
 
@@ -138,20 +142,15 @@ input {
 
 .iconContainer {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: space-between;
 }
-
-/* .edit-icons, .delete-icons {
-  cursor: pointer;
-  margin: 8px;
-} */
 
 .edit-icons, .delete-icons {
   
   font-size: 16px;
   cursor: pointer;
-  margin: 8px;
+  margin-left: 20px;
 }
 
 #description {
@@ -180,15 +179,15 @@ input {
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background-color 0.3s; /* For smooth color transition */
+  transition: background-color 0.3s; 
 }
 
 .header-dark:hover {
-  color: #5d5d5d; /* Light gray, but you can choose any color you prefer */
+  color: #5d5d5d;
 }
 
 .header-dark img {
-  margin-right: 20px; /* This style was inferred from the space you added between the logo and the text */
+  margin-right: 20px; 
 }
 
 
@@ -197,19 +196,11 @@ input {
   justify-content: space-between;
   align-items: center;
 }
-/* 
-.truncate {
-  max-width: 90%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: pointer;
-} */
 
 .truncate-multiline {
   position: relative;
-  line-height: 1.2em;  /* adjust to your needs */
-  max-height: 4.5em;  /* 3 lines; adjust if you want more */
+  line-height: 1.2em;  
+  max-height: 4.5em;  
   padding-right: 1em;
   overflow: hidden;
 }
@@ -220,6 +211,6 @@ input {
   bottom: 0;
   right: 0;
   line-height: 1.2em;
-  padding-left: 5px;  /* space before ellipsis */
-  background: inherit;  /* to blend into the background color of the container */
+  padding-left: 5px;  
+  background: inherit;
 }

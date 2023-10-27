@@ -1,20 +1,19 @@
 import React, { useState } from "react";
 import Button from "@material-ui/core/Button";
+import { entityTypes } from "./entityTypes";
 
 const EntityCreationForm = ({
   user,
   fetchEntities,
   create_entity,
   test_create_entity,
-  entityTypes,
-  initialFormData = { entityDescription: "" },
-  initialEntityType = "",
-  initialSubEntities = 6,
   setDialogState,
 }) => {
-  const [formData, setFormData] = useState(initialFormData);
-  const [entityType, setEntityType] = useState(initialEntityType);
-  const [subEntities, setSubEntities] = useState(initialSubEntities);
+  const [entityDescription, setEntityDescription] = useState("");
+  const [entityType, setEntityType] = useState("Aircraft");
+  const [subEntities, setSubEntities] = useState(6);
+
+  entityTypes.sort();
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -23,12 +22,9 @@ const EntityCreationForm = ({
       setEntityType(value);
     } else if (name === "subEntities") {
       setSubEntities(value);
+    } else if (name === "entityDescription") {
+      setEntityDescription(value);
     }
-
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
   };
 
   return (
@@ -40,7 +36,7 @@ const EntityCreationForm = ({
               user,
               entityType,
               subEntities,
-              formData,
+              entityDescription,
               setDialogState,
               fetchEntities
             );
@@ -50,7 +46,7 @@ const EntityCreationForm = ({
               user,
               entityType,
               subEntities,
-              formData,
+              entityDescription,
               setDialogState,
               fetchEntities
             );
@@ -88,7 +84,7 @@ const EntityCreationForm = ({
         id="description"
         name="entityDescription"
         className="entityDescription"
-        value={formData.entityDescription}
+        value={entityDescription}
         onChange={handleInputChange}
         placeholder="Describe the Entity you want to create, in as little or much detail as you'd like."
       />

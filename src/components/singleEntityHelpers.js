@@ -117,12 +117,10 @@ export const extractRelevantEntities = (currentEntity, entityData) => {
     console.warn("currentEntity is null or undefined.");
     return { entities: [], disabledIds: [] };
   }
-  console.log("currentEntity:", currentEntity);
   let relevantEntities = [];
 
   // Extract all parent lineage up to the Base Entity
   let parentId = currentEntity.parent_id;
-  console.log("parentId:", parentId);
   while (parentId && parentId != "00000000-0000-0000-0000-000000000000") {
     const parentEntity = entityData.find((e) => e.id === parentId);
     if (!parentEntity) {
@@ -144,7 +142,6 @@ export const extractRelevantEntities = (currentEntity, entityData) => {
   const subEntities = entityData.filter(
     (e) => e.parent_id === currentEntity.parent_id
   );
-  console.log("subEntities:", subEntities);
   relevantEntities = [...relevantEntities, ...subEntities];
 
   return {

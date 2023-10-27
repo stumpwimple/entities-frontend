@@ -19,6 +19,8 @@ import { DataContext } from "../DataContext";
 import axios from "axios";
 import "../App.css";
 
+import { create_entity, test_create_entity } from "../apiUtils";
+
 import {
   deleteEntity,
   moveEntity,
@@ -27,6 +29,7 @@ import {
   handleMoveEntityLogic,
 } from "./singleEntityHelpers";
 import CampaignSearchDrawer from "./CampaignSearchDrawer";
+import SubEntityCreationDialog from "./SubEntityCreationDialog";
 
 function SingleEntity({ thisEntity }) {
   const [nameOrTypeFilter, setNameOrTypeFilter] = useState("");
@@ -47,7 +50,7 @@ function SingleEntity({ thisEntity }) {
   const [editingPropertyName, setEditingPropertyName] = useState(null);
   const [parentEntity, setParentEntity] = useState(null);
   const [entity, setEntity] = useState(null);
-  const [subEntities, setSubEntities] = useState(6);
+  const [numberOfProperties, setNumberOfProperties] = useState(6);
   const [dialogState, setDialogState] = useState({
     open: false,
     content: "",
@@ -69,24 +72,31 @@ function SingleEntity({ thisEntity }) {
   const [editedEntityTypeValue, setEditedEntityTypeValue] = useState("");
   const [editingEntityType, setEditingEntityType] = useState(null);
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false);
-  const [genObject, setGenObject] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [selectedMoveEntity, setSelectedMoveEntity] = useState(null);
 
   const { entities, disabledIds } = extractRelevantEntities(entity, entityData);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // const entity = entityData.find((entity) => entity.id === selectedEntityId);
+  const [subEntityDialogOpen, setSubEntityDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [expandedDescriptionId, setExpandedDescriptionId] = useState(null);
+
+  const handleOpenSubEntityDialog = (currentProperty) => {
+    setSelectedProperty(currentProperty);
+    setSubEntityDialogOpen(true);
+  };
+
+  const handleCloseSubEntityDialog = () => {
+    console.log("Closing sub-entity dialog...");
+    setSelectedProperty(null);
+    setSubEntityDialogOpen(false);
+  };
 
   const createSubEntity = async (subEntityInfo) => {
     console.log("Creating sub-entity with info:", subEntityInfo);
     console.log("selectedEntityId", selectedEntityId);
 
-    setDialogState({
-      open: true,
-      content: "Creating sub-entity...",
-      title: "Entity Creation",
-    });
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
@@ -100,35 +110,23 @@ function SingleEntity({ thisEntity }) {
       );
       console.log(response.data.name);
 
-      await fetchEntities();
-      setDialogState({
-        open: true,
-        content: "Sub-entity: {response.data.name} created successfully!",
-        title: "Success",
-      });
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
-      console.error("Error details:", error.message);
-      setDialogState({
-        open: true,
-        content: `Error, Don't panic, Do try again: ${error.message}`,
-        title: "Error",
-      });
+      console.log("Error detailzzz:", error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
-    setTimeout(
-      () => setDialogState((prevState) => ({ ...prevState, open: false })),
-      2000
-    );
   };
 
   const test_createSubEntity = async (subEntityInfo) => {
     console.log("Creating sub-entity with info:", subEntityInfo);
     console.log("selectedEntityId", selectedEntityId);
 
-    setDialogState({
-      open: true,
-      content: "Creating test sub-entity...",
-      title: "Entity Creation",
-    });
     try {
       const response = await axios.post(
         "https://entities.fly.dev/test-generate-entity",
@@ -142,24 +140,17 @@ function SingleEntity({ thisEntity }) {
       );
       console.log(response.data.name);
 
-      await fetchEntities();
-      setDialogState({
-        open: true,
-        content: "Sub-entity: {response.data.name} created successfully!",
-        title: "Success",
-      });
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (error) {
-      console.error("Error details:", error.message);
-      setDialogState({
-        open: true,
-        content: `Error, Don't panic, Do try again: ${error.message}`,
-        title: "Error",
-      });
+      console.log("Error detailzzz:", error.message);
+      return {
+        success: false,
+        error: error.message,
+      };
     }
-    setTimeout(
-      () => setDialogState((prevState) => ({ ...prevState, open: false })),
-      2000
-    );
   };
 
   const fetchEntities = async () => {
@@ -425,7 +416,7 @@ function SingleEntity({ thisEntity }) {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
 
-    setSubEntities(value);
+    setNumberOfProperties(value);
   };
 
   useEffect(() => {
@@ -501,23 +492,23 @@ function SingleEntity({ thisEntity }) {
   };
 
   return (
-    <Container>
+    <Container className="singleEntityContainer">
       <Grid container spacing={3} alignItems="top" className="entityRow">
-        <Grid item xs={3}>
-          <Typography variant="h5">Entity Name:</Typography>
-        </Grid>
-        <Grid item xs={9}>
+        <Grid className="noPadding" item xs={12}>
           <Typography variant="h4">{entity.name}</Typography>
+          <Typography variant="body1">{entity.entity_type}</Typography>
         </Grid>
         <>
           <hr className="customLine" />
-          <Grid item xs={3}>
-            <Typography variant="h6">Parent:</Typography>
+          <Grid className="noPadding" item xs={12} md={3}>
+            <Typography variant="h6" className="propertyName">
+              Parent:
+            </Typography>
           </Grid>
-          <Grid item xs={9}>
+          <Grid item className="noPadding" xs={12} md={9}>
             <Typography
               className="grid-container"
-              variant="h6"
+              variant="body1"
               onClick={() => {
                 setSelectedEntityId(parentEntity ? parentEntity.id : null);
                 console.log(
@@ -527,7 +518,7 @@ function SingleEntity({ thisEntity }) {
               }}
               style={{ cursor: "pointer" }}
             >
-              {parentEntity ? parentEntity.name : "Base Entity"}
+              {parentEntity ? parentEntity.name : "Base Entity"} (click to go)
               <Button
                 onClick={(event) => {
                   event.stopPropagation();
@@ -541,19 +532,14 @@ function SingleEntity({ thisEntity }) {
           </Grid>
         </>
         <hr className="customLine" />
-        <Grid item xs={3}>
-          <Typography variant="h6">Type:</Typography>
+        <Grid item xs={12} md={3} className="flexContainer">
+          <Typography variant="h6" className="propertyName">
+            Description
+          </Typography>
         </Grid>
-        <Grid item xs={9}>
-          <Typography variant="body1">{entity.entity_type}</Typography>
-        </Grid>
-        <hr className="customLine" />
-        <Grid item xs={3} className="flexContainer">
-          <Typography variant="h6">Description</Typography>
-        </Grid>
-        <Grid item xs={9}>
+        <Grid item xs={12} md={9}>
           <Typography
-            variant="body1"
+            variant="body2"
             onClick={() => startEditing(entity, "description")}
             style={{ cursor: "pointer" }}
           >
@@ -569,15 +555,20 @@ function SingleEntity({ thisEntity }) {
             fieldBeingEdited={fieldBeingEdited}
           />
         </Grid>
-
-        <Grid container spacing={3}>
+        <Grid container>
           <hr className="customLine" />
           {/* Filters */}
-          <Grid item xs={3}></Grid>
-          <Grid item xs={9} style={{ display: "flex", alignItems: "center" }}>
+          <Grid item xs={3} md={3} />
+          <Grid
+            item
+            xs={12}
+            md={9}
+            style={{ display: "flex", alignItems: "center" }}
+            className="entityRow"
+          >
             <Button
               onClick={clearFilters}
-              style={{ margin: 6, minWidth: "auto" }}
+              style={{ margin: 2, minWidth: "auto" }}
             >
               X
             </Button>
@@ -591,14 +582,21 @@ function SingleEntity({ thisEntity }) {
             />
           </Grid>
         </Grid>
-
-        {/* Entity Data */}
-
+        {/* Property Data */}{" "}
+        <Grid container spacing={3} alignItems="top" className="entityRow">
+          <Typography
+            className="entityName"
+            variant="h6"
+            style={{ marginTop: "10px" }}
+          >
+            <strong>Entity Properties</strong>
+          </Typography>
+        </Grid>
         {filteredProperties.map((property, index) => (
           <>
             <hr className="customLine" />
 
-            <Grid item xs={3}>
+            <Grid item xs={12} md={3} className="flexContainer">
               {editingPropertyName === index ? (
                 <input
                   value={editedPropertyNameValue}
@@ -607,76 +605,67 @@ function SingleEntity({ thisEntity }) {
                   autoFocus
                 />
               ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    className="propertyName"
-                    onClick={() => startEditingPropertyName(property, index)}
-                  >
-                    {property.name}
-                  </Typography>
+                <div className="entityInfo">
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <tbody>
+                      <tr>
+                        {/* Cell for the property name */}
+                        <td style={{ width: "100%", verticalAlign: "middle" }}>
+                          <Typography
+                            variant="h6"
+                            className="propertyName"
+                            onClick={() =>
+                              startEditingPropertyName(property, index)
+                            }
+                          >
+                            {property.name}
+                          </Typography>
+                        </td>
+                        {/* Cell for the delete icon */}
+                        <td style={{ verticalAlign: "middle" }}>
+                          <span
+                            className="material-icons delete-icons"
+                            onClick={() => openDeletePropertyDialog(property)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            delete
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        {/* Cell for the + button. This spans 2 columns to cover the entire width */}
+                        <td
+                          colSpan={2}
+                          style={{ verticalAlign: "middle", paddingTop: "4px" }}
+                        >
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleOpenSubEntityDialog(property)}
+                          >
+                            Make Sub-Entity
+                          </Button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
 
-                  <div className="iconContainer">
-                    <span
-                      className="material-icons delete-icons"
-                      onClick={() => openDeletePropertyDialog(property)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      delete
-                    </span>
-                  </div>
+                  <SubEntityCreationDialog
+                    user={user}
+                    fetchEntities={fetchEntities}
+                    create_entity={createSubEntity}
+                    test_create_entity={test_createSubEntity}
+                    dialogOpen={subEntityDialogOpen}
+                    setDialogOpen={setSubEntityDialogOpen}
+                    entity={entity}
+                    property={selectedProperty}
+                    onClose={handleCloseSubEntityDialog}
+                  />
                 </div>
               )}
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={(event) => {
-                  let entityDescription = `An entity of type ${property.name} with entity description ${property.description}`;
-
-                  if (genObject) {
-                    entityDescription +=
-                      ". Each of the properties should be a specific and unique example with a name and brief description given";
-                  }
-
-                  entityDescription += `. Develop and Create the entity with at least ${subEntities} properties. While creating the entity consider its parent entity for context and background consideration.  parent name: ${entity.name}, parent summary: ${entity.description}`;
-
-                  if (event.ctrlKey) {
-                    test_createSubEntity(entityDescription);
-                  } else {
-                    createSubEntity(entityDescription);
-                  }
-                }}
-              >
-                Make Sub-Entity
-              </Button>
               <br />
-              <select
-                name="subEntities"
-                className="entityTypeSelect"
-                value={subEntities}
-                onChange={handleInputChange}
-              >
-                <option value="3">3 properties</option>
-                <option value="6">6 properties</option>
-                <option value="8">8 properties</option>
-                <option value="9">9 properties</option>
-              </select>
-              <input
-                type="checkbox"
-                checked={genObject}
-                onChange={() => setGenObject(!genObject)}
-              />
-              <label>obj?</label>
-
-              {/* //checkbox for objects */}
             </Grid>
-            <Grid item xs={9}>
+            <Grid item xs={12} md={9} className="flexContainer">
               <Typography
                 variant="body2"
                 className="propertyDescription"
@@ -700,31 +689,25 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           </>
         ))}
-
         <hr className="customLine" />
-        <Grid item xs={3}>
-          <Button
-            variant="outlined"
-            onClick={() => setIsAddPropertyDialogOpen(true)}
-          >
-            Add Property
-          </Button>
-          <br />
-          <Button
-            variant="outlined"
-            style={{ marginTop: 15 }}
-            onClick={() => setIsAddSubEntityDialogOpen(true)}
-          >
-            Add Sub-Entity
-          </Button>
-        </Grid>
-        <Grid
-          item
-          xs={9}
-          style={{ display: "flex", alignItems: "center" }}
-        ></Grid>
+        <Button
+          variant="outlined"
+          onClick={() => setIsAddPropertyDialogOpen(true)}
+          style={{ margin: 4 }}
+        >
+          Add Property
+        </Button>
       </Grid>
-      <br />
+
+      <Grid container spacing={3} alignItems="top" className="entityRow">
+        <Typography
+          className="entityName"
+          variant="h6"
+          style={{ marginTop: "30px" }}
+        >
+          <strong>Sub-Entities</strong>
+        </Typography>
+      </Grid>
       {entityData.map(
         (sub_entity) =>
           sub_entity.parent_id === selectedEntityId && (
@@ -736,7 +719,7 @@ function SingleEntity({ thisEntity }) {
               className="entityRow"
             >
               <hr className="customLine" />
-              <Grid item xs={3} className="flexContainer">
+              <Grid item xs={12} md={3} className="flexContainer">
                 <div className="entityInfo">
                   <div
                     style={{
@@ -751,20 +734,34 @@ function SingleEntity({ thisEntity }) {
                       onClick={() => {
                         setSelectedEntityId(sub_entity.id);
                       }}
-                      style={{ cursor: "pointer", marginRight: "20px" }}
+                      style={{ cursor: "pointer", marginRight: "10px" }}
                     >
                       {sub_entity.name}
                     </Typography>
 
-                    <span
-                      class="material-icons edit-icons"
-                      onClick={() => {
-                        startEditing(sub_entity, "sub_name");
-                        console.log("sub_entity", sub_entity);
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
                       }}
                     >
-                      edit
-                    </span>
+                      <span
+                        class="material-icons edit-icons"
+                        onClick={() => {
+                          startEditing(sub_entity, "sub_name");
+                          console.log("sub_entity", sub_entity);
+                        }}
+                      >
+                        edit
+                      </span>
+
+                      <span
+                        class="material-icons delete-icons"
+                        onClick={() => openDeleteDialog(sub_entity)}
+                      >
+                        delete
+                      </span>
+                    </div>
                   </div>
 
                   {editingEntityType === sub_entity.id ? (
@@ -782,18 +779,15 @@ function SingleEntity({ thisEntity }) {
                       {sub_entity.entity_type}
                     </Typography>
                   )}
-                  <div className="iconContainer">
-                    <span
-                      class="material-icons delete-icons"
-                      onClick={() => openDeleteDialog(sub_entity)}
-                    >
-                      delete
-                    </span>
-                  </div>
                 </div>
               </Grid>
-              <Grid item xs={9}>
+              <Grid item xs={12} md={9}>
                 <Typography
+                  // className={
+                  //   expandedDescriptionId === entity.id
+                  //     ? ""
+                  //     : "truncate-multiline"
+                  // }
                   variant="body2"
                   onClick={() => startEditing(sub_entity, "description")}
                 >
@@ -803,6 +797,17 @@ function SingleEntity({ thisEntity }) {
             </Grid>
           )
       )}
+
+      <hr className="customLine" />
+      <Button
+        variant="outlined"
+        style={{ margin: 4 }}
+        onClick={() => {
+          handleOpenSubEntityDialog("");
+        }}
+      >
+        Add Sub-Entity
+      </Button>
 
       <CampaignSearchDrawer
         searchTerm={searchTerm}
@@ -956,7 +961,7 @@ function SingleEntity({ thisEntity }) {
           </Button>
           <Button
             onClick={() => {
-              const subEntityInfo = `An entity of type ${subEntityType} with entity description ${subEntityDescription} and with ${subEntities} properties. While generating the entity consider it's parent entity for context and background consideration.  parent name: ${entity.name}, parent summary ${entity.description}}`;
+              const subEntityInfo = `An entity of type ${subEntityType} with entity description ${subEntityDescription} and with ${numberOfProperties} properties. While generating the entity consider it's parent entity for context and background consideration.  parent name: ${entity.name}, parent summary ${entity.description}}`;
               createSubEntity(subEntityInfo);
               setIsAddSubEntityDialogOpen(false);
             }}

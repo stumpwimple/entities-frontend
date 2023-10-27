@@ -88,14 +88,17 @@ const findTopParent = (entityId, entityData) => {
   }
   console.log("Finding top parent of:", entityId);
   let currentEntity = entityData.find((entity) => entity.id === entityId);
-  console.log("Current entity is:", currentEntity);
-  // console.log("Current entity has parent:", currentEntity.parent_id);
 
   while (
     currentEntity &&
     currentEntity.parent_id !== "00000000-0000-0000-0000-000000000000"
   ) {
-    console.log("Current entity has parent:", currentEntity.parent_id);
+    console.log(
+      "Current entity",
+      currentEntity.id,
+      " has parent:",
+      currentEntity.parent_id
+    );
     currentEntity = entityData.find(
       (entity) => entity.id === currentEntity.parent_id
     );
@@ -132,9 +135,6 @@ function flattenHierarchy(entityData, selectedEntityId) {
 
 function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
   const [expanded, setExpanded] = useState(false);
-  const [tempSearchTerm, setTempSearchTerm] = useState("");
-  const [autoSearch, setAutoSearch] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 'sm' is for small screens, you can adjust as needed
 
@@ -144,12 +144,7 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
   const [flattenedEntityData, setFlattenedEntityData] = useState([]);
 
   useEffect(() => {
-    if (entityData && entityData.length > 0) {
-      setFlattenedEntityData(flattenHierarchy(entityData, selectedEntityId));
-    }
-  }, [entityData, selectedEntityId]);
-
-  useEffect(() => {
+    console.log("useEffect is running...");
     if (entityData && entityData.length > 0) {
       setFlattenedEntityData(flattenHierarchy(entityData, selectedEntityId));
     }
@@ -177,20 +172,30 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
     const items = Array.from(flattenedEntityData);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-
-    // Update local state
-    setFlattenedEntityData(items);
-
-    // Update entityData in DataContext
-    const updatedEntityData = items.map((item) => {
-      // Remove the depth attribute since entityData might not need it
-      const { depth, ...rest } = item;
-      return rest;
-    });
-    setEntityData(updatedEntityData); // Update the entityData in DataContext
+    console.log("reorderedItem", reorderedItem);
+    console.log("items", items);
 
     // Update order in the database for only the moved entity
     updateEntityOrder(reorderedItem.id, result.destination.index);
+
+    // Update local state
+    const updatedEntityData = entityData.map((item) => {
+      if (item.id === reorderedItem.id) {
+        console.log(
+          "the item to update",
+          item,
+          " to ",
+          result.destination.index
+        );
+
+        return { ...item, order: result.destination.index };
+      }
+      return item;
+    });
+    setFlattenedEntityData(flattenHierarchy(items, selectedEntityId));
+
+    setEntityData(updatedEntityData);
+    // console.log("Entity Data: ", entityData);
   };
 
   const getChildrenRecursively = (parentId) => {

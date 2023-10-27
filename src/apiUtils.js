@@ -4,23 +4,17 @@ export const create_entity = async (
   user,
   entityType,
   subEntities,
-  formData,
-  setDialogState,
+  entityDescription,
   fetchEntities
 ) => {
-  setDialogState({
-    open: true,
-    content: "Creating entity...",
-    title: "Entity Creation",
-  });
-
+  console.log("entityDescription:", entityDescription);
   const modified_description =
     "type is " +
     entityType +
     ": with " +
     subEntities +
-    "properties, and the following entity description" +
-    formData.entityDescription;
+    " properties, and the following entity description" +
+    entityDescription;
 
   try {
     const response = await axios.post(
@@ -28,90 +22,61 @@ export const create_entity = async (
       // "http://localhost:5000/generate-entity",
       {
         entity_description: modified_description,
-        // entity_type: formData.entityType,
-        // sub_entities: formData.subEntities,
         user_id: user,
         parent_id: "00000000-0000-0000-0000-000000000000",
       }
     );
-    console.log(response.data);
 
-    await fetchEntities();
+    // await fetchEntities();
 
-    setDialogState({
-      open: true,
-      content: "Entity created successfully!",
-      title: "Success",
-    });
+    return {
+      success: true,
+      data: response.data,
+    };
   } catch (error) {
-    console.error("Error details:", error.message);
-    setDialogState({
-      open: true,
-      content: `Error, Don't panic, Do try again: ${error.message}`,
-      title: "Error",
-    });
+    console.log("Error detailzzz:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
   }
-
-  setTimeout(
-    () => setDialogState((prevState) => ({ ...prevState, open: false })),
-    2000
-  );
 };
 
 export const test_create_entity = async (
   user,
   entityType,
   subEntities,
-  formData,
-  setDialogState,
+  entityDescription,
   fetchEntities
 ) => {
-  setDialogState({
-    open: true,
-    content: "Creating test entity...",
-    title: "Entity Creation",
-  });
-
   const modified_description =
     "type is " +
     entityType +
     ": with " +
     subEntities +
     "properties, and the following entity description" +
-    formData.entityDescription;
+    entityDescription;
 
   try {
     const response = await axios.post(
       "https://entities.fly.dev/test-generate-entity",
-       //"http://localhost:5000/test-generate-entity",
+      //"http://localhost:5000/test-generate-entity",
       {
         entity_description: modified_description,
-        // entity_type: formData.entityType,
-        // sub_entities: formData.subEntities,
         user_id: user,
         parent_id: "00000000-0000-0000-0000-000000000000",
       }
     );
-    console.log(response.data);
 
-    await fetchEntities();
-
-    setDialogState({
-      open: true,
-      content: "Entity created successfully!",
-      title: "Success",
-    });
+    return {
+      success: true,
+      data: response.data,
+    };
   } catch (error) {
-    console.error("Error details:", error.message);
-    setDialogState({
-      open: true,
-      content: `Error, Don't panic, Do try again: ${error.message}`,
-      title: "Error",
-    });
+    console.log("Error detailzzz:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
   }
-
-  setTimeout(
-    () => setDialogState((prevState) => ({ ...prevState, open: false })),
-    3000
-  );
 };
