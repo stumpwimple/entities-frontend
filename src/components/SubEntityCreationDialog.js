@@ -52,7 +52,6 @@ const SubEntityCreationDialog = ({
 
     bgContext += `. Develop and Create the entity with at least ${numberOfProperties} properties. While creating the entity consider its parent entity for context and background consideration.  parent entity name: ${entity.name}, parent summary: ${entity.description}`;
 
-    console.log(bgContext);
     setPromptDescription(bgContext);
 
     try {
@@ -86,7 +85,6 @@ const SubEntityCreationDialog = ({
   useEffect(() => {
     if (property) {
       setEntityDescription(property.description);
-      console.log("property:", property);
     }
   }, [property]);
 

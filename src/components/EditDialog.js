@@ -22,7 +22,6 @@ const EditDialog = ({
   }, [initialValue]);
 
   const handleConfirmAndSave = () => {
-    console.log("editedValue:", editedValue);
     onSave(editedValue); // Save the edited data
     onClose(); // Close the dialog
   };

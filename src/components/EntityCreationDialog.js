@@ -50,7 +50,6 @@ const EntityCreationDialog = ({
           subEntities,
           entityDescription
         );
-        console.log("result:", result);
       }
 
       if (result && !result.success) {

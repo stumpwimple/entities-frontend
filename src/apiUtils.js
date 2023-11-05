@@ -7,7 +7,6 @@ export const create_entity = async (
   entityDescription,
   fetchEntities
 ) => {
-  console.log("entityDescription:", entityDescription);
   const modified_description =
     "type is " +
     entityType +
@@ -34,7 +33,7 @@ export const create_entity = async (
       data: response.data,
     };
   } catch (error) {
-    console.log("Error detailzzz:", error.message);
+    console.log("Error details:", error.message);
     return {
       success: false,
       error: error.message,
@@ -73,7 +72,7 @@ export const test_create_entity = async (
       data: response.data,
     };
   } catch (error) {
-    console.log("Error detailzzz:", error.message);
+    console.log("Error details:", error.message);
     return {
       success: false,
       error: error.message,

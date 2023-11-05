@@ -86,24 +86,16 @@ const findTopParent = (entityId, entityData) => {
   if (!entityData) {
     return null; // or appropriate default/fallback value
   }
-  console.log("Finding top parent of:", entityId);
   let currentEntity = entityData.find((entity) => entity.id === entityId);
 
   while (
     currentEntity &&
     currentEntity.parent_id !== "00000000-0000-0000-0000-000000000000"
   ) {
-    console.log(
-      "Current entity",
-      currentEntity.id,
-      " has parent:",
-      currentEntity.parent_id
-    );
     currentEntity = entityData.find(
       (entity) => entity.id === currentEntity.parent_id
     );
   }
-  console.log("Top parent is:", currentEntity);
   return currentEntity;
 };
 
@@ -144,7 +136,6 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
   const [flattenedEntityData, setFlattenedEntityData] = useState([]);
 
   useEffect(() => {
-    console.log("useEffect is running...");
     if (entityData && entityData.length > 0) {
       setFlattenedEntityData(flattenHierarchy(entityData, selectedEntityId));
     }
@@ -172,8 +163,6 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
     const items = Array.from(flattenedEntityData);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
-    console.log("reorderedItem", reorderedItem);
-    console.log("items", items);
 
     // Update order in the database for only the moved entity
     updateEntityOrder(reorderedItem.id, result.destination.index);
@@ -181,13 +170,6 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
     // Update local state
     const updatedEntityData = entityData.map((item) => {
       if (item.id === reorderedItem.id) {
-        console.log(
-          "the item to update",
-          item,
-          " to ",
-          result.destination.index
-        );
-
         return { ...item, order: result.destination.index };
       }
       return item;
@@ -195,7 +177,6 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
     setFlattenedEntityData(flattenHierarchy(items, selectedEntityId));
 
     setEntityData(updatedEntityData);
-    // console.log("Entity Data: ", entityData);
   };
 
   const getChildrenRecursively = (parentId) => {
@@ -209,10 +190,6 @@ function CampaignSearchDrawer({ searchTerm, setSearchTerm }) {
       children: getChildrenRecursively(child.id),
     }));
   };
-
-  // const getChildren = (parentId) => {
-  //   return entityData.filter((entity) => entity.parent_id === parentId);
-  // };
 
   const topParent = findTopParent(selectedEntityId);
 

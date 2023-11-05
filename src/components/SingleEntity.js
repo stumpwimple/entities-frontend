@@ -88,14 +88,11 @@ function SingleEntity({ thisEntity }) {
   };
 
   const handleCloseSubEntityDialog = () => {
-    console.log("Closing sub-entity dialog...");
     setSelectedProperty(null);
     setSubEntityDialogOpen(false);
   };
 
   const createSubEntity = async (subEntityInfo) => {
-    console.log("Creating sub-entity with info:", subEntityInfo);
-    console.log("selectedEntityId", selectedEntityId);
 
     try {
       const response = await axios.post(
@@ -108,14 +105,13 @@ function SingleEntity({ thisEntity }) {
           parent_id: selectedEntityId,
         }
       );
-      console.log(response.data.name);
 
       return {
         success: true,
         data: response.data,
       };
     } catch (error) {
-      console.log("Error detailzzz:", error.message);
+      console.log("Error details:", error.message);
       return {
         success: false,
         error: error.message,
@@ -124,8 +120,6 @@ function SingleEntity({ thisEntity }) {
   };
 
   const test_createSubEntity = async (subEntityInfo) => {
-    console.log("Creating sub-entity with info:", subEntityInfo);
-    console.log("selectedEntityId", selectedEntityId);
 
     try {
       const response = await axios.post(
@@ -138,14 +132,13 @@ function SingleEntity({ thisEntity }) {
           parent_id: selectedEntityId,
         }
       );
-      console.log(response.data.name);
 
       return {
         success: true,
         data: response.data,
       };
     } catch (error) {
-      console.log("Error detailzzz:", error.message);
+      console.log("Error details:", error.message);
       return {
         success: false,
         error: error.message,
@@ -160,7 +153,6 @@ function SingleEntity({ thisEntity }) {
         .select("*")
         .eq("user_id", String(user))
         .order("order", { ascending: true });
-      console.log("data", data);
       if (data) setEntityData(data);
     }
   };
@@ -184,7 +176,6 @@ function SingleEntity({ thisEntity }) {
     if (field === "properties") {
       setEditedData(edit_entity.properties[propertyIndex].description);
     } else if (field === "name" || field === "sub_name") {
-      console.log("edit_entity.name", edit_entity.name);
       setEditedData(edit_entity.name);
     } else if (field === "description") {
       setEditedData(edit_entity.description);
@@ -197,7 +188,6 @@ function SingleEntity({ thisEntity }) {
   }
 
   const saveEditedEntity = async (newValue) => {
-    console.log("Saving edited entity...");
     const updatedData = {};
     if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
       updatedData.name = newValue;
@@ -209,9 +199,8 @@ function SingleEntity({ thisEntity }) {
       updatedProperties[editingPropertyIndex].description = newValue;
       updatedData.properties = updatedProperties;
     } else {
-      console.log("Updating entity with ID:", editingEntity);
+      console.log("field Error on entity with ID:", editingEntity);
     }
-    console.log("Data being sent to Supabase:", updatedData);
 
     const { data, error } = await supabase
       .from("entities")
@@ -219,36 +208,25 @@ function SingleEntity({ thisEntity }) {
       .eq("id", editingEntity);
 
     if (!error) {
-      console.log("Successfully updated entity. Updating local state...");
-      console.log("entity data", thisEntity);
 
       const updatedEntities = entityData.map((entity) => {
         if (entity.id === editingEntity) {
-          console.log("entity", entity);
-          console.log({ ...entity, [fieldBeingEdited]: newValue });
 
           let updatedEntity = { ...entity };
           if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
             updatedEntity.name = newValue;
-            console.log(editedData);
-            console.log("name: Updated Entity:", updatedEntity);
           } else if (fieldBeingEdited === "description") {
             updatedEntity.description = newValue;
-            console.log("description: Updated Entity:", updatedEntity);
           } else if (fieldBeingEdited === "properties") {
             updatedEntity.properties[editingPropertyIndex].description =
               newValue;
-            console.log("properties: Updated Entity:", updatedEntity);
           }
-          console.log("Updated Entity (Alternative method):", updatedEntity);
-
           return updatedEntity;
         }
         return entity;
       });
 
       setEntityData(updatedEntities);
-      console.log("updatedEntities", updatedEntities);
 
       setEditingEntity(null);
       setDialogState({
@@ -391,7 +369,6 @@ function SingleEntity({ thisEntity }) {
     const updatedProperties = [...entity.properties];
     updatedProperties[editingPropertyName].name = editedPropertyNameValue;
 
-    console.log("Updated properties:", updatedProperties);
     const { data, error } = await supabase
       .from("entities")
       .update({ properties: updatedProperties })
@@ -460,7 +437,6 @@ function SingleEntity({ thisEntity }) {
 
       setEntityData(updatedEntities);
 
-      console.log("Successfully updated entity type");
 
       setEditingEntityType(null);
     } else {
@@ -511,10 +487,7 @@ function SingleEntity({ thisEntity }) {
               variant="body1"
               onClick={() => {
                 setSelectedEntityId(parentEntity ? parentEntity.id : null);
-                console.log(
-                  "Setting ID:",
-                  parentEntity ? parentEntity.id : null
-                );
+
               }}
               style={{ cursor: "pointer" }}
             >
@@ -523,7 +496,6 @@ function SingleEntity({ thisEntity }) {
                 onClick={(event) => {
                   event.stopPropagation();
                   setIsMoveDialogOpen(true);
-                  console.log("test");
                 }}
               >
                 MOVE ENTITY
@@ -749,7 +721,6 @@ function SingleEntity({ thisEntity }) {
                         class="material-icons edit-icons"
                         onClick={() => {
                           startEditing(sub_entity, "sub_name");
-                          console.log("sub_entity", sub_entity);
                         }}
                       >
                         edit

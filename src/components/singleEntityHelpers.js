@@ -18,8 +18,6 @@ export const deleteEntity = async (entityId, entityData, setEntityData) => {
 };
 
 export const moveEntity = async (entity, newParentEntity) => {
-  console.log("entity:", entity);
-  console.log("newParentEntity:", newParentEntity);
   if (!newParentEntity) return;
   const { error } = await supabase
     .from("entities")

@@ -67,7 +67,6 @@ function App() {
 
     //Load Image on session start
     if (!sessionStorage.getItem("hasSeenLoadingImage")) {
-      console.log("hasSeenLoadingImage is false");
       setShowLoadingImage(true);
       setTimeout(() => {
         setShowLoadingImage(false);
@@ -76,7 +75,6 @@ function App() {
       // Set the local storage flag so the user doesn't see the image again
       sessionStorage.setItem("hasSeenLoadingImage", "true");
     }
-    console.log("randomImage:", randomImage);
   }, [session]);
 
   useEffect(() => {
@@ -84,11 +82,9 @@ function App() {
     supabase.auth
       .getSession()
       .then((response) => {
-        console.log("getSession response:", response);
         if (response && response.data && response.data.session) {
           setSession(response.data.session);
           setUser(response.data.session.user.id);
-          console.log(response.data.session.user.id);
         }
       })
       .catch((error) => {
@@ -99,10 +95,8 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed. New session:", session);
       setSession(session);
       if (session && session.user) {
-        console.log(session.user.id);
         setUser(session.user.id);
       }
     });

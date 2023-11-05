@@ -111,16 +111,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     saveEditedEntity();
   }
 
-  // const saveEditedEntity = async (newValue) => {
-  //   console.log("editedData:", editingEntity, editedData, newValue);
-  //   // Update entity in Supabase
-  //   const { data, error } = await supabase
-  //     .from("entities")
-  //     .update({ name: newValue })
-  //     .eq("id", editingEntity);
-
-  //   // If the update is successful, update local state
-  // };
 
   const saveEditedEntity = async (newValue) => {
     const updatedData = {};
@@ -130,8 +120,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       updatedData.description = newValue;
     }
 
-    console.log("Updating entity with ID:", editingEntity);
-    console.log("Data being sent to Supabase:", updatedData);
 
     const { data, error } = await supabase
       .from("entities")
@@ -139,24 +127,16 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       .eq("id", editingEntity);
 
     if (!error) {
-      console.log("Successfully updated entity. Updating local state...");
-      console.log("entity data", entityData);
 
       const updatedEntities = entityData.map((entity) => {
         if (entity.id === editingEntity) {
-          console.log("entity", entity);
-          console.log({ ...entity, [fieldBeingEdited]: newValue });
 
           let updatedEntity = { ...entity };
           if (fieldBeingEdited === "name") {
             updatedEntity.name = newValue;
-            console.log(editedData);
-            console.log("name: Updated Entity:", updatedEntity);
           } else if (fieldBeingEdited === "description") {
             updatedEntity.description = newValue;
-            console.log("description: Updated Entity:", updatedEntity);
           }
-          console.log("Updated Entity (Alternative method):", updatedEntity);
 
           return updatedEntity; // Just return the updatedEntity
         }
@@ -164,7 +144,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       });
 
       setEntityData(updatedEntities);
-      console.log("updatedEntities", updatedEntities);
       setEditingEntity(null);
     } else {
       // Handle the error appropriately
@@ -224,7 +203,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
 
       setEntityData(updatedEntities);
 
-      console.log("Successfully updated entity type");
 
       setEditingEntityType(null);
     } else {
@@ -237,8 +215,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
 
   const isTruncated = (ref) => {
     const element = ref.current;
-    console.log("Scroll Height: ", element.scrollHeight);
-    console.log("Client Height: ", element.clientHeight);
     return element.scrollHeight > element.clientHeight;
   };
 
