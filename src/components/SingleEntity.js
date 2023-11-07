@@ -11,6 +11,7 @@ import {
   DialogTitle,
   Select,
   MenuItem,
+  Tooltip,
 } from "@material-ui/core";
 import { useState, useContext, useEffect } from "react";
 import EditDialog from "./EditDialog";
@@ -18,8 +19,14 @@ import supabase from "../supabaseClient";
 import { DataContext } from "../DataContext";
 import axios from "axios";
 import "../App.css";
+import ImageDialog from "./ImageDialog";
 
-import { create_entity, test_create_entity } from "../apiUtils";
+import {
+  create_entity,
+  generateArt,
+  test_create_entity,
+  uploadToBucket,
+} from "../apiUtils";
 
 import {
   deleteEntity,
@@ -45,6 +52,8 @@ function SingleEntity({ thisEntity }) {
     setSelectedEntityId,
     setEntityData,
     entityData,
+    setUserCookie,
+    userCookie,
   } = useContext(DataContext);
   const [editingPropertyIndex, setEditingPropertyIndex] = useState(null);
   const [editingPropertyName, setEditingPropertyName] = useState(null);
@@ -74,6 +83,7 @@ function SingleEntity({ thisEntity }) {
   const [deleteEntityDialogOpen, setDeleteEntityDialogOpen] = useState(false);
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
   const [selectedMoveEntity, setSelectedMoveEntity] = useState(null);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
   const { entities, disabledIds } = extractRelevantEntities(entity, entityData);
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,6 +91,14 @@ function SingleEntity({ thisEntity }) {
   const [subEntityDialogOpen, setSubEntityDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [expandedDescriptionId, setExpandedDescriptionId] = useState(null);
+  const [userCookieInput, setUserCookieInput] = useState(null);
+  const [isInputActive, setInputActive] = useState(!userCookie);
+
+  const [isImageButtonsVisible, setIsImageButtonsVisible] = useState(false);
+
+  const toggleVisibility = () => {
+    setIsImageButtonsVisible(!isImageButtonsVisible);
+  };
 
   const handleOpenSubEntityDialog = (currentProperty) => {
     setSelectedProperty(currentProperty);
@@ -92,8 +110,11 @@ function SingleEntity({ thisEntity }) {
     setSubEntityDialogOpen(false);
   };
 
-  const createSubEntity = async (subEntityInfo) => {
+  const handleOpenImageDialogButtonClick = (entity) => {
+    setIsImageDialogOpen(true);
+  };
 
+  const createSubEntity = async (subEntityInfo) => {
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
@@ -120,7 +141,6 @@ function SingleEntity({ thisEntity }) {
   };
 
   const test_createSubEntity = async (subEntityInfo) => {
-
     try {
       const response = await axios.post(
         "https://entities.fly.dev/test-generate-entity",
@@ -208,10 +228,8 @@ function SingleEntity({ thisEntity }) {
       .eq("id", editingEntity);
 
     if (!error) {
-
       const updatedEntities = entityData.map((entity) => {
         if (entity.id === editingEntity) {
-
           let updatedEntity = { ...entity };
           if (fieldBeingEdited === "name" || fieldBeingEdited === "sub_name") {
             updatedEntity.name = newValue;
@@ -396,6 +414,19 @@ function SingleEntity({ thisEntity }) {
     setNumberOfProperties(value);
   };
 
+  const handleCookieInputChange = (event) => {
+    setUserCookieInput(event.target.value);
+  };
+
+  const handleSetClick = () => {
+    if (isInputActive) {
+      setUserCookie(userCookieInput);
+      setInputActive(false);
+    } else {
+      setInputActive(true);
+    }
+  };
+
   useEffect(() => {
     if (entity) {
       const foundParentEntity = entityData.find(
@@ -409,6 +440,13 @@ function SingleEntity({ thisEntity }) {
     const foundEntity = entityData.find((e) => e.id === selectedEntityId);
     setEntity(foundEntity);
   }, [entityData, selectedEntityId]);
+
+  useEffect(() => {
+    if (userCookie) {
+      setInputActive(false); // Disable the input if userCookie exists
+      setUserCookieInput(userCookie);
+    }
+  }, [userCookie]);
 
   if (!entity) {
     return <div>Entity not found</div>;
@@ -436,7 +474,6 @@ function SingleEntity({ thisEntity }) {
       });
 
       setEntityData(updatedEntities);
-
 
       setEditingEntityType(null);
     } else {
@@ -467,40 +504,152 @@ function SingleEntity({ thisEntity }) {
     setIsMoveDialogOpen(false);
   };
 
+  const handleGenerateArtClick = async () => {
+    let existing_urls = entity.image_urls || [];
+    console.log("Generating art for entity:", entity.name);
+    console.log("Existing URLS", existing_urls);
+
+    const result = await generateArt(
+      entity.description.slice(0, 1000),
+      userCookie
+    );
+    // uploadToBucket(user, result.data.image_url);
+    console.log("Result:", result);
+
+    if (result.success) {
+      console.log("Existing URLs", existing_urls);
+      console.log("Image URL:", result.data);
+
+      // Ensure result.data is an array before spreading it
+      const newImageUrls = Array.isArray(result.data)
+        ? result.data
+        : [result.data];
+
+      // Combine existing_urls with newImageUrls
+      const combinedImageUrls = [...existing_urls, ...newImageUrls];
+
+      console.log("Combined image URLs:", combinedImageUrls);
+
+      const { data, error } = await supabase
+        .from("entities")
+        .update({ image_urls: combinedImageUrls })
+        .eq("id", entity.id);
+
+      if (!error) {
+        console.log("Updated entity:", data);
+        const updatedEntities = entityData.map((thisEntity) => {
+          if (entity.id === thisEntity.id) {
+            return { ...thisEntity, image_urls: combinedImageUrls };
+          }
+          return thisEntity;
+        });
+        setEntityData(updatedEntities);
+      } else {
+        console.error("Error updating entity:", error);
+      }
+    }
+  };
+
   return (
     <Container className="singleEntityContainer">
       <Grid container spacing={3} alignItems="top" className="entityRow">
-        <Grid className="noPadding" item xs={12}>
+        <Grid
+          item
+          xs={12}
+          container
+          alignItems="center"
+          justifyContent="space-between"
+          className="entityRow"
+        >
           <Typography variant="h4">{entity.name}</Typography>
-          <Typography variant="body1">{entity.entity_type}</Typography>
-        </Grid>
-        <>
-          <hr className="customLine" />
-          <Grid className="noPadding" item xs={12} md={3}>
-            <Typography variant="h6" className="propertyName">
-              Parent:
-            </Typography>
-          </Grid>
-          <Grid item className="noPadding" xs={12} md={9}>
-            <Typography
-              className="grid-container"
-              variant="body1"
-              onClick={() => {
-                setSelectedEntityId(parentEntity ? parentEntity.id : null);
+          <Grid
+            container
+            direction="row"
+            xs
+            alignItems="center"
+            justifyContent="flex-end"
+            className="noPadding"
+          >
+            {isImageButtonsVisible && (
+              <>
+                <Tooltip
+                  title="In order to use image generation you must enter your own Bing image creator key. To obtain, login to Bing Image Creator, hit F12, go to the application tab, in Storage find Cookies, find bing cookie, then find the entry row labeled '_U' and copy its value to the bing gen cookie input and hit set. If you don't have boost tokens available, the process may fail right now. This is a temporary solution until the Dalle3 API is released."
+                  placement="top"
+                  classes={{ tooltip: "tooltipLargeText" }}
+                >
+                  <span className="material-icons edit-icons">
+                    help_outline
+                  </span>
+                </Tooltip>
 
-              }}
-              style={{ cursor: "pointer" }}
+                <Button onClick={handleSetClick}>Set</Button>
+
+                <input
+                  placeholder="bing gen cookie"
+                  value={isInputActive ? userCookieInput : userCookie || ""}
+                  onChange={handleCookieInputChange}
+                  disabled={!isInputActive}
+                />
+              </>
+            )}
+
+            <Button onClick={toggleVisibility} className="hiddenButton" />
+          </Grid>
+        </Grid>
+        <Grid container spacing={3} alignItems="top" className="entityRow">
+          <Typography variant="body1">{entity.entity_type}</Typography>
+          {isImageButtonsVisible && (
+            <Grid
+              item
+              container
+              direction="column"
+              xs
+              alignItems="flex-end"
+              className="noPadding"
             >
-              {parentEntity ? parentEntity.name : "Base Entity"} (click to go)
               <Button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setIsMoveDialogOpen(true);
-                }}
+                onClick={() => handleOpenImageDialogButtonClick()}
+                className="noMargin"
               >
-                MOVE ENTITY
+                View Entity
               </Button>
-            </Typography>
+            </Grid>
+          )}
+        </Grid>
+        <ImageDialog
+          open={isImageDialogOpen}
+          onClose={() => setIsImageDialogOpen(false)}
+          entity={entity}
+          onGenerateArt={handleGenerateArtClick}
+        />
+        <hr className="customLine" />
+        <>
+          <Grid container spacing={3} alignItems="top" className="entityRow">
+            <Grid className="noPadding" item xs={12} md={3}>
+              <Typography variant="h6" className="propertyName">
+                Parent:
+              </Typography>
+            </Grid>
+            <Grid item className="noPadding" xs={12} md={9}>
+              <Typography
+                className="grid-container"
+                variant="body1"
+                onClick={() => {
+                  setSelectedEntityId(parentEntity ? parentEntity.id : null);
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                {parentEntity ? parentEntity.name : "Base Entity"} (click to go)
+                <Button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsMoveDialogOpen(true);
+                  }}
+                >
+                  MOVE ENTITY
+                </Button>
+              </Typography>
+            </Grid>
           </Grid>
         </>
         <hr className="customLine" />

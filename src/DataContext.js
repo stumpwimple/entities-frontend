@@ -20,6 +20,8 @@ export const DataProvider = ({ children }) => {
 
   const [entityData, setEntityData] = useState([]);
 
+  const [userCookie, setUserCookie] = useState(null);
+
   const [selectedEntityId, setSelectedEntityId] = useState(null);
 
   return (
@@ -33,6 +35,8 @@ export const DataProvider = ({ children }) => {
         setUser,
         selectedEntityId,
         setSelectedEntityId,
+        userCookie,
+        setUserCookie,
       }}
     >
       {children}
