@@ -7,9 +7,7 @@ import DialogActions from "@material-ui/core/DialogActions";
 import Button from "@material-ui/core/Button";
 
 const ImageDialog = ({ open, onClose, entity, onGenerateArt }) => {
-  console.log("entity", entity);
   const { image_urls } = entity || { image_urls: [] };
-  console.log("image_urls", image_urls);
 
   // Function to handle the click event and check for Ctrl key
   const handleButtonClick = (event) => {

@@ -80,14 +80,36 @@ export const test_create_entity = async (
   }
 };
 
+export const verify_user = async (user) => {
+  const this_user = user;
+  try {
+    const response = await axios.post(
+      "https://entities.fly.dev/verify-user",
+      //"http://localhost:5000/verify-user",
+      {
+        user_id: user,
+      }
+    );
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.log("Error details:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
 export const generateArt = async (description, user_cookie) => {
-  console.log("in generateArt w/ description", description);
   const modified_description = description;
 
   try {
     const response = await axios.post(
-      //"https://entities.fly.dev/generate-image",
-      "http://localhost:5000/generate-image",
+      "https://entities.fly.dev/generate-image",
+      //"http://localhost:5000/generate-image",
       {
         entity_description: modified_description,
         user_cookie: user_cookie,

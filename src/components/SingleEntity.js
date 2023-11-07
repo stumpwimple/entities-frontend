@@ -26,6 +26,7 @@ import {
   generateArt,
   test_create_entity,
   uploadToBucket,
+  verify_user,
 } from "../apiUtils";
 
 import {
@@ -95,6 +96,7 @@ function SingleEntity({ thisEntity }) {
   const [isInputActive, setInputActive] = useState(!userCookie);
 
   const [isImageButtonsVisible, setIsImageButtonsVisible] = useState(false);
+  const [isUserAllowed, setIsUserAllowed] = useState(false);
 
   const toggleVisibility = () => {
     setIsImageButtonsVisible(!isImageButtonsVisible);
@@ -448,6 +450,10 @@ function SingleEntity({ thisEntity }) {
     }
   }, [userCookie]);
 
+  useEffect(() => {
+    console.log(verify_user(user));
+  }, []);
+
   if (!entity) {
     return <div>Entity not found</div>;
   }
@@ -550,6 +556,11 @@ function SingleEntity({ thisEntity }) {
     }
   };
 
+  const user_list = [
+    "e87773ab-1cdf-4116-bc7b-ec265f72e908",
+    "6d5e2c4d-0223-4db5-a4ce-07900e884fa3",
+  ];
+
   return (
     <Container className="singleEntityContainer">
       <Grid container spacing={3} alignItems="top" className="entityRow">
@@ -572,7 +583,7 @@ function SingleEntity({ thisEntity }) {
           >
             {isImageButtonsVisible && (
               <>
-                <Tooltip
+                {/* <Tooltip
                   title="In order to use image generation you must enter your own Bing image creator key. To obtain, login to Bing Image Creator, hit F12, go to the application tab, in Storage find Cookies, find bing cookie, then find the entry row labeled '_U' and copy its value to the bing gen cookie input and hit set. If you don't have boost tokens available, the process may fail right now. This is a temporary solution until the Dalle3 API is released."
                   placement="top"
                   classes={{ tooltip: "tooltipLargeText" }}
@@ -581,19 +592,19 @@ function SingleEntity({ thisEntity }) {
                     help_outline
                   </span>
                 </Tooltip>
-
                 <Button onClick={handleSetClick}>Set</Button>
-
                 <input
                   placeholder="bing gen cookie"
                   value={isInputActive ? userCookieInput : userCookie || ""}
                   onChange={handleCookieInputChange}
                   disabled={!isInputActive}
-                />
+                /> */}
               </>
             )}
 
-            <Button onClick={toggleVisibility} className="hiddenButton" />
+            {user_list.includes(user) && (
+              <Button onClick={toggleVisibility} className="hiddenButton" />
+            )}
           </Grid>
         </Grid>
         <Grid container spacing={3} alignItems="top" className="entityRow">
