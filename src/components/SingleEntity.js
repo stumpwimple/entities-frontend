@@ -120,7 +120,7 @@ function SingleEntity({ thisEntity }) {
     try {
       const response = await axios.post(
         "https://entities.fly.dev/generate-entity",
-        // "http://localhost:5000/generate-entity",
+        //"http://localhost:5000/generate-entity",
 
         {
           entity_description: subEntityInfo,

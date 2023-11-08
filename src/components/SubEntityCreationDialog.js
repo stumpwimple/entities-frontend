@@ -70,11 +70,11 @@ const SubEntityCreationDialog = ({
       setStatus("successful");
       setDialogOpen(true);
 
-      // Close the dialog after 5 seconds
+      // Close the dialog after 4 seconds
       setTimeout(() => {
         setDialogOpen(false);
         setStatus("");
-      }, 5000);
+      }, 4000);
     } catch (error) {
       // Handle error scenarios here
       setStatus(`Error: ${error.message}`);

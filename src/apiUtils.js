@@ -18,7 +18,7 @@ export const create_entity = async (
   try {
     const response = await axios.post(
       "https://entities.fly.dev/generate-entity",
-      // "http://localhost:5000/generate-entity",
+      //"http://localhost:5000/generate-entity",
       {
         entity_description: modified_description,
         user_id: user,
@@ -66,6 +66,7 @@ export const test_create_entity = async (
         parent_id: "00000000-0000-0000-0000-000000000000",
       }
     );
+    console.log(response.data);
 
     return {
       success: true,
@@ -90,6 +91,7 @@ export const verify_user = async (user) => {
         user_id: user,
       }
     );
+    console.log(response.data);
     return {
       success: true,
       data: response.data,
