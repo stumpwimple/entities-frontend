@@ -451,8 +451,20 @@ function SingleEntity({ thisEntity }) {
   }, [userCookie]);
 
   useEffect(() => {
-    console.log(verify_user(user));
-  }, []);
+    const checkUser = async () => {
+      try {
+        const response = await verify_user(user);
+        const isUserVerified = response.data.isAllowed;
+        if (isUserVerified) {
+          setIsUserAllowed(true);
+        }
+      } catch (error) {
+        console.error("An error occurred while verifying the user:", error);
+      }
+    };
+
+    checkUser();
+  }, [user]);
 
   if (!entity) {
     return <div>Entity not found</div>;
@@ -556,11 +568,6 @@ function SingleEntity({ thisEntity }) {
     }
   };
 
-  const user_list = [
-    "e87773ab-1cdf-4116-bc7b-ec265f72e908",
-    "6d5e2c4d-0223-4db5-a4ce-07900e884fa3",
-  ];
-
   return (
     <Container className="singleEntityContainer">
       <Grid container spacing={3} alignItems="top" className="entityRow">
@@ -602,7 +609,7 @@ function SingleEntity({ thisEntity }) {
               </>
             )}
 
-            {user_list.includes(user) && (
+            {isUserAllowed && (
               <Button onClick={toggleVisibility} className="hiddenButton" />
             )}
           </Grid>
