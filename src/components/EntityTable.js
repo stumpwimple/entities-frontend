@@ -111,7 +111,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
     saveEditedEntity();
   }
 
-
   const saveEditedEntity = async (newValue) => {
     const updatedData = {};
     if (fieldBeingEdited === "name") {
@@ -120,17 +119,14 @@ function EntityTable({ entityData, setSelectedEntityId }) {
       updatedData.description = newValue;
     }
 
-
     const { data, error } = await supabase
       .from("entities")
       .update(updatedData)
       .eq("id", editingEntity);
 
     if (!error) {
-
       const updatedEntities = entityData.map((entity) => {
         if (entity.id === editingEntity) {
-
           let updatedEntity = { ...entity };
           if (fieldBeingEdited === "name") {
             updatedEntity.name = newValue;
@@ -203,7 +199,6 @@ function EntityTable({ entityData, setSelectedEntityId }) {
 
       setEntityData(updatedEntities);
 
-
       setEditingEntityType(null);
     } else {
       console.error("Error updating entity type:", error);
@@ -260,7 +255,7 @@ function EntityTable({ entityData, setSelectedEntityId }) {
               container
               key={entity.id}
               spacing={3}
-              alignItems="top"
+              alignItems="flex-start"
               className="entityRow"
             >
               <hr className="customLine" />

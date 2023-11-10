@@ -20,7 +20,7 @@ import { DataContext } from "../DataContext";
 import axios from "axios";
 import "../App.css";
 import ImageDialog from "./ImageDialog";
-
+import { v4 as uuidv4 } from "uuid";
 import {
   create_entity,
   generateArt,
@@ -523,49 +523,13 @@ function SingleEntity({ thisEntity }) {
   };
 
   const handleGenerateArtClick = async () => {
-    let existing_urls = entity.image_urls || [];
     console.log("Generating art for entity:", entity.name);
-    console.log("Existing URLS", existing_urls);
 
     const result = await generateArt(
-      entity.description.slice(0, 1000),
-      userCookie
+      user,
+      entity.id,
+      entity.description.slice(0, 1000)
     );
-    // uploadToBucket(user, result.data.image_url);
-    console.log("Result:", result);
-
-    if (result.success) {
-      console.log("Existing URLs", existing_urls);
-      console.log("Image URL:", result.data);
-
-      // Ensure result.data is an array before spreading it
-      const newImageUrls = Array.isArray(result.data)
-        ? result.data
-        : [result.data];
-
-      // Combine existing_urls with newImageUrls
-      const combinedImageUrls = [...existing_urls, ...newImageUrls];
-
-      console.log("Combined image URLs:", combinedImageUrls);
-
-      const { data, error } = await supabase
-        .from("entities")
-        .update({ image_urls: combinedImageUrls })
-        .eq("id", entity.id);
-
-      if (!error) {
-        console.log("Updated entity:", data);
-        const updatedEntities = entityData.map((thisEntity) => {
-          if (entity.id === thisEntity.id) {
-            return { ...thisEntity, image_urls: combinedImageUrls };
-          }
-          return thisEntity;
-        });
-        setEntityData(updatedEntities);
-      } else {
-        console.error("Error updating entity:", error);
-      }
-    }
   };
 
   return (
@@ -581,9 +545,9 @@ function SingleEntity({ thisEntity }) {
         >
           <Typography variant="h4">{entity.name}</Typography>
           <Grid
-            container
+            item
             direction="row"
-            xs
+            xs={1}
             alignItems="center"
             justifyContent="flex-end"
             className="noPadding"
@@ -621,7 +585,7 @@ function SingleEntity({ thisEntity }) {
               item
               container
               direction="column"
-              xs
+              xs={1}
               alignItems="flex-end"
               className="noPadding"
             >
@@ -885,7 +849,7 @@ function SingleEntity({ thisEntity }) {
                       }}
                     >
                       <span
-                        class="material-icons edit-icons"
+                        className="material-icons edit-icons"
                         onClick={() => {
                           startEditing(sub_entity, "sub_name");
                         }}
@@ -894,7 +858,7 @@ function SingleEntity({ thisEntity }) {
                       </span>
 
                       <span
-                        class="material-icons delete-icons"
+                        className="material-icons delete-icons"
                         onClick={() => openDeleteDialog(sub_entity)}
                       >
                         delete

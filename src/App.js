@@ -16,6 +16,7 @@ import DialogComponent from "./components/DialogComponent";
 import EntityCreationDialog from "./components/EntityCreationDialog";
 
 import LoadingImage from "./components/LoadingImage";
+import Login from "./components/Login";
 
 function App() {
   const {
@@ -27,6 +28,7 @@ function App() {
     setSelectedEntityId,
   } = useContext(DataContext);
   const [session, setSession] = useState(null);
+
 
   const [dialogState, setDialogState] = useState({
     open: false,
@@ -126,7 +128,12 @@ function App() {
 
         {!session ? (
           <Container>
-            <Auth supabaseClient={supabase} />
+            {/* <Auth
+              supabaseClient={supabase}
+              redirectTo="stumpwimple.github.io/entities-frontend/"
+              providers={["google"]}
+            /> */}
+            <Login />
           </Container>
         ) : (
           <>

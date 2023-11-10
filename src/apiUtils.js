@@ -91,7 +91,6 @@ export const verify_user = async (user) => {
         user_id: user,
       }
     );
-    console.log(response.data);
     return {
       success: true,
       data: response.data,
@@ -105,7 +104,7 @@ export const verify_user = async (user) => {
   }
 };
 
-export const generateArt = async (description, user_cookie) => {
+export const generateArt = async (user_id, entity_id, description) => {
   const modified_description = description;
 
   try {
@@ -113,11 +112,11 @@ export const generateArt = async (description, user_cookie) => {
       "https://entities.fly.dev/generate-image",
       //"http://localhost:5000/generate-image",
       {
+        user_id: user_id,
+        entity_id: entity_id,
         entity_description: modified_description,
-        user_cookie: user_cookie,
       }
     );
-    console.log(response.data);
     return {
       success: true,
       data: response.data,
