@@ -552,52 +552,18 @@ function SingleEntity({ thisEntity }) {
             justifyContent="flex-end"
             className="noPadding"
           >
-            {isImageButtonsVisible && (
-              <>
-                {/* <Tooltip
-                  title="In order to use image generation you must enter your own Bing image creator key. To obtain, login to Bing Image Creator, hit F12, go to the application tab, in Storage find Cookies, find bing cookie, then find the entry row labeled '_U' and copy its value to the bing gen cookie input and hit set. If you don't have boost tokens available, the process may fail right now. This is a temporary solution until the Dalle3 API is released."
-                  placement="top"
-                  classes={{ tooltip: "tooltipLargeText" }}
-                >
-                  <span className="material-icons edit-icons">
-                    help_outline
-                  </span>
-                </Tooltip>
-                <Button onClick={handleSetClick}>Set</Button>
-                <input
-                  placeholder="bing gen cookie"
-                  value={isInputActive ? userCookieInput : userCookie || ""}
-                  onChange={handleCookieInputChange}
-                  disabled={!isInputActive}
-                /> */}
-              </>
-            )}
 
             {isUserAllowed && (
-              <Button onClick={toggleVisibility} className="hiddenButton" />
-            )}
-          </Grid>
-        </Grid>
-        <Grid container spacing={3} alignItems="top" className="entityRow">
-          <Typography variant="body1">{entity.entity_type}</Typography>
-          {isImageButtonsVisible && (
-            <Grid
-              item
-              container
-              direction="column"
-              xs={1}
-              alignItems="flex-end"
-              className="noPadding"
-            >
               <Button
                 onClick={() => handleOpenImageDialogButtonClick()}
                 className="noMargin"
               >
                 View Entity
               </Button>
-            </Grid>
-          )}
+            )}
+          </Grid>
         </Grid>
+
         <ImageDialog
           open={isImageDialogOpen}
           onClose={() => setIsImageDialogOpen(false)}
